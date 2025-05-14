@@ -1,0 +1,23 @@
+CC      = gcc -std=gnu11
+CFLAGS  = -Wall -Wextra -pedantic -g
+LDLIBS  = -lSDL2
+LDFLAGS = -fsanitize=address -fsanitize=leak -fsanitize=undefined
+
+.PHONY: clean run all
+
+all: main
+
+main: main.o gfx.o
+	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
+
+main.o: main.c gfx/gfx.c
+	$(CC) $(CFLAGS) $< -c
+
+gfx/gfx.o: gfx/gfx.c gfx/gfx.h
+	$(CC) $(CFLAGS) $< -c
+
+run: main
+	./main
+
+clean:
+	rm -f main *.o

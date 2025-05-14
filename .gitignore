@@ -1,0 +1,60 @@
+# Executable and object files
+*.o
+*.out
+*.exe
+*.obj
+
+# Dependency files
+*.d
+
+# Library files
+*.lib
+*.a
+*.so
+*.dll
+*.dylib
+
+# Build directories
+/build/
+/bin/
+/Debug/
+/Release/
+
+# IDE-specific files
+*.log
+*.workspace
+*.cproject
+*.project
+.idea/
+.vscode/
+
+# Temporary or backup files
+*.swp
+*.tmp
+*.temp
+*.bak
+*.old
+*.orig
+*.rej
+*~
+
+# Testing files
+*.gcno
+*.gcda
+*.gcov
+
+# Windows-specific files
+*.pdb
+Thumbs.db
+desktop.ini
+
+# macOS-specific files
+.DS_Store
+
+# test files
+*.cand
+*.txt
+!src/actual_output.txt
+
+# binary file
+main
