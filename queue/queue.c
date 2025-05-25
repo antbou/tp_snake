@@ -4,15 +4,21 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-struct element_t {
-    int x, y;
-    struct element_t* next;
-};
+struct element_t;
 
-struct queue_t {
-    struct element_t* head;
-    struct element_t* tail;
-};
+struct queue_t;
+
+struct element_t* position_init(int x, int y) {
+    struct element_t* element = malloc(sizeof(struct element_t));
+    if (!element) {
+        fprintf(stderr, "Failed to allocate memory for element");
+        return NULL;
+    }
+    element->x = x;
+    element->y = y;
+    element->next = NULL;
+    return element;
+}
 
 struct queue_t* queue_create() {
     struct queue_t* queue = malloc(sizeof(struct queue_t));
@@ -57,7 +63,9 @@ bool queue_enqueue(struct queue_t* queue, struct element_t* element) {
         queue->head = element;
         queue->tail = element;
     } else {
+        // 1. links the current last element to the new one, extending the chain
         queue->tail->next = element;
+        // 2. updates the tail pointer to mark the new element as the last in the queue
         queue->tail = element;
     }
 

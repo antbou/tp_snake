@@ -6,9 +6,17 @@
 /**
  * Coordinates x, y, with linked list
  */
-struct element_t;
+struct element_t {
+    int x, y;
+    struct element_t* next;
+};
 
-struct queue_t;
+struct queue_t {
+    struct element_t* head;
+    struct element_t* tail;
+};
+
+struct element_t* position_init(int x, int y);
 
 /**
  * Create and initialize an empty queue.
