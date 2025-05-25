@@ -13,11 +13,14 @@ main: main.o gfx.o
 main.o: main.c gfx/gfx.c
 	$(CC) $(CFLAGS) $< -c
 
-gfx/gfx.o: gfx/gfx.c gfx/gfx.h
+gfx.o: gfx/gfx.c gfx/gfx.h
+	$(CC) $(CFLAGS) $< -c
+
+queue.o: queue/queue.c queue/queue.h
 	$(CC) $(CFLAGS) $< -c
 
 run: main
 	./main
 
 clean:
-	rm -f main *.o
+	rm -f main *.o gfx/*.o queue/*.o
