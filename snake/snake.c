@@ -21,4 +21,27 @@ struct queue_t* init_snake(const int width, const int height) {
     return queue;
 }
 
+struct element_t* new_position(enum direction dir, struct element_t* element) {
+    int new_x = element->x;
+    int new_y = element->y;
+    const int dist = 4;
+    switch (dir) {
+    case left:
+        new_x -= dist;
+        break;
+    case right:
+        new_x += dist;
+        break;
+    case up:
+        new_y -= dist;
+        break;
+    case down:
+        new_y += dist;
+        break;
+    }
+
+    return position_init(new_x, new_y);
+}
+
+
 // lorsque le serpent “mange” de la nourriture sa longueur augmente de un et la nourriture disparait ;

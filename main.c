@@ -7,25 +7,26 @@
 #include "snake/snake.h"
 #include "queue/queue.h"
 
-enum direction {
-	left,
-	up,
-	down,
-	right
+
+enum screen_color_state {
+	EMPTY = COLOR_BLACK,
+	SNAKE = COLOR_WHITE,
+	FOOD = COLOR_RED,
+	WALL = COLOR_BLUE
 };
 
-static void draw_rectangle(struct gfx_context_t* context, int x0, int x1, int y0, int y1) {
+static void draw_border(struct gfx_context_t* context, int x0, int x1, int y0, int y1) {
 	for (int ix = x0; ix < x1; ++ix) {
-		gfx_putpixel(context, ix, y0, COLOR_WHITE);
+		gfx_putpixel(context, ix, y0, WALL);
 	}
 	for (int ix = x0; ix < x1; ++ix) {
-		gfx_putpixel(context, ix, y1 - 1, COLOR_WHITE);
+		gfx_putpixel(context, ix, y1 - 1, WALL);
 	}
 	for (int iy = y0; iy < y1; ++iy) {
-		gfx_putpixel(context, x0, iy, COLOR_WHITE);
+		gfx_putpixel(context, x0, iy, WALL);
 	}
 	for (int iy = y0; iy < y1; ++iy) {
-		gfx_putpixel(context, x1 - 1, iy, COLOR_WHITE);
+		gfx_putpixel(context, x1 - 1, iy, WALL);
 	}
 }
 
@@ -40,45 +41,35 @@ static void draw_pixel(struct gfx_context_t* context, int x, int y, int zoom, ui
 static void draw_snake_initial(struct gfx_context_t* context, struct queue_t* queue) {
 	struct element_t* current = queue->head;
 	while (current != NULL) {
-		draw_pixel(context, current->x, current->y, 4, COLOR_WHITE);
+		draw_pixel(context, current->x, current->y, 4, SNAKE);
 		current = current->next;
 	}
 }
 
-static void move_snake(struct gfx_context_t* context, struct queue_t* queue, enum direction dir) {
-	struct element_t* head = queue->tail;
-	int new_x = head->x;
-	int new_y = head->y;
-
-	switch (dir) {
-	case left:
-		new_x -= 4;
-		break;
-	case right:
-		new_x += 4;
-		break;
-	case up:
-		new_y -= 4;
-		break;
-	case down:
-		new_y += 4;
-		break;
-	}
-
-	struct element_t* new_head = position_init(new_x, new_y);
-
-	draw_pixel(context, new_x, new_y, 4, COLOR_WHITE);
-
-	queue_enqueue(queue, new_head);
+static void move_snake(struct gfx_context_t* context, struct queue_t* queue, struct element_t* new_pos) {
+	draw_pixel(context, new_pos->x, new_pos->y, 4, SNAKE);
+	queue_enqueue(queue, new_pos);
 
 	// Get tail position before removing it
 	struct element_t* old_tail = queue->head;
 	int tail_x = old_tail->x;
 	int tail_y = old_tail->y;
 
+	// Remove tail
 	queue_dequeue(queue);
+	draw_pixel(context, tail_x, tail_y, 4, EMPTY);
+}
 
-	draw_pixel(context, tail_x, tail_y, 4, COLOR_BLACK);
+static bool is_wall_detected(struct gfx_context_t* context, struct element_t* new_pos) {
+	const int zoom = 4;
+	for (int ix = 0; ix < zoom; ix++) {
+		for (int iy = 0; iy < zoom; iy++) {
+			if (gfx_getpixel(context, new_pos->x + ix, new_pos->y + iy) == WALL) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 int main(void) {
@@ -89,9 +80,9 @@ int main(void) {
 		fprintf(stderr, "Graphics initialization failed!\n");
 		return EXIT_FAILURE;
 	}
-	gfx_clear(ctxt, COLOR_BLACK);
-	// • l'écran de jeu est entouré d'une paroi
-	draw_rectangle(ctxt, 10, width - 10, 10, height - 10);
+	gfx_clear(ctxt, EMPTY);
+	// l'écran de jeu est entouré d'une paroi
+	draw_border(ctxt, 10, width - 10, 10, height - 10);
 
 	// le serpent démarre avec une longueur de 3
 	struct queue_t* queue = init_snake(width, height);
@@ -104,8 +95,8 @@ int main(void) {
 	double frames_per_second = 24.0;
 	double time_between_frames = 1.0 / frames_per_second * 1e6; // in micro seconds
 
-	int last_direction;
 	int direction = right;
+	int last_direction = right;
 
 	bool done = false;
 	// la partie se termine par une victoire si le serpent occupe tout l'écran
@@ -138,16 +129,19 @@ int main(void) {
 			break;
 		}
 
-		// Move and update snake display
-		move_snake(ctxt, queue, direction);
-
 		gfx_present(ctxt);
 		done = quit_signal();
 
+		// Move and update snake display
+		struct element_t* new_head = new_position(direction, queue->tail);
+		if (is_wall_detected(ctxt, new_head)) {
+			break;
+		}
 		// demi tour immédiat
 		if (last_direction + direction == 3) {
-			done = true;
+			break;
 		}
+		move_snake(ctxt, queue, new_head);
 
 		clock_gettime(CLOCK_MONOTONIC, &finish);
 		double mu_seconds_elapsed = finish.tv_sec - start.tv_sec;
@@ -157,6 +151,7 @@ int main(void) {
 			usleep((int32_t)remaining_time);
 		}
 	}
+
 	queue_destroy(&queue);
 	gfx_destroy(ctxt);
 	return EXIT_SUCCESS;
