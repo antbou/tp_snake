@@ -3,20 +3,12 @@
 
 #include <stdbool.h>
 
-/**
- * Coordinates x, y, with linked list
- */
-struct element_t {
-    int x, y;
-    struct element_t* next;
-};
-
 struct queue_t {
-    struct element_t* head;
-    struct element_t* tail;
+    struct coord_t* head;
+    struct coord_t* tail;
 };
 
-struct element_t* position_init(int x, int y);
+struct coord_t* coord_init(int x, int y);
 
 /**
  * Create and initialize an empty queue.
@@ -44,7 +36,7 @@ bool queue_isEmpty(struct queue_t* queue);
  * @param element A pointer to the element to add.
  * @return true on success, false if queue or element is NULL.
  */
-bool queue_enqueue(struct queue_t* queue, struct element_t* element);
+bool queue_enqueue(struct queue_t* queue, struct coord_t* element);
 
 /**
  * Remove the element at the front of the queue.
@@ -58,6 +50,6 @@ bool queue_dequeue(struct queue_t* queue);
  * @param queue A pointer to the queue.
  * @return A pointer to the head element, or NULL if the queue is empty or NULL.
  */
-struct element_t* queue_peek(struct queue_t* queue);
+struct coord_t* queue_peek(struct queue_t* queue);
 
 #endif

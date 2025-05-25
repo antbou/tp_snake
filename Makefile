@@ -7,7 +7,7 @@ LDFLAGS = -fsanitize=address -fsanitize=leak -fsanitize=undefined
 
 all: main
 
-main: main.o gfx.o snake.o queue.o
+main: main.o gfx.o snake.o queue.o coord.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
 main.o: main.c gfx/gfx.c
@@ -16,10 +16,13 @@ main.o: main.c gfx/gfx.c
 gfx.o: gfx/gfx.c gfx/gfx.h
 	$(CC) $(CFLAGS) $< -c
 
-snake.o: snake/snake.c snake/snake.h queue/queue.h
+snake.o: snake/snake.c snake/snake.h queue/queue.h coord/coord.h
 	$(CC) $(CFLAGS) $< -c
 
 queue.o: queue/queue.c queue/queue.h
+	$(CC) $(CFLAGS) $< -c
+
+coord.o: coord/coord.c coord/coord.h
 	$(CC) $(CFLAGS) $< -c
 
 run: main

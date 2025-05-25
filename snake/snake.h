@@ -1,6 +1,8 @@
 #ifndef _SNAKE_H_
 #define _SNAKE_H_
 
+#include "../coord/coord.h"
+
 enum direction {
     left,
     up,
@@ -9,6 +11,6 @@ enum direction {
 };
 
 struct queue_t* init_snake(int width, int height);
-struct element_t* new_position(enum direction dir, struct element_t* element);
+struct coord_t* new_position(enum direction dir, struct coord_t* element);
 
 #endif

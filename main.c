@@ -6,7 +6,10 @@
 #include "gfx/gfx.h"
 #include "snake/snake.h"
 #include "queue/queue.h"
+#include "coord/coord.h"
 
+#define max_food_count 5
+#define food_spawn_interval 1000000 // in microseconds
 
 enum screen_color_state {
 	EMPTY = COLOR_BLACK,
@@ -39,19 +42,19 @@ static void draw_pixel(struct gfx_context_t* context, int x, int y, int zoom, ui
 }
 
 static void draw_snake_initial(struct gfx_context_t* context, struct queue_t* queue) {
-	struct element_t* current = queue->head;
+	struct coord_t* current = queue->head;
 	while (current != NULL) {
 		draw_pixel(context, current->x, current->y, 4, SNAKE);
 		current = current->next;
 	}
 }
 
-static void move_snake(struct gfx_context_t* context, struct queue_t* queue, struct element_t* new_pos) {
+static void move_snake(struct gfx_context_t* context, struct queue_t* queue, struct coord_t* new_pos) {
 	draw_pixel(context, new_pos->x, new_pos->y, 4, SNAKE);
 	queue_enqueue(queue, new_pos);
 
 	// Get tail position before removing it
-	struct element_t* old_tail = queue->head;
+	struct coord_t* old_tail = queue->head;
 	int tail_x = old_tail->x;
 	int tail_y = old_tail->y;
 
@@ -60,7 +63,7 @@ static void move_snake(struct gfx_context_t* context, struct queue_t* queue, str
 	draw_pixel(context, tail_x, tail_y, 4, EMPTY);
 }
 
-static bool is_wall_detected(struct gfx_context_t* context, struct element_t* new_pos) {
+static bool is_wall_detected(struct gfx_context_t* context, struct coord_t* new_pos) {
 	const int zoom = 4;
 	for (int ix = 0; ix < zoom; ix++) {
 		for (int iy = 0; iy < zoom; iy++) {
@@ -96,13 +99,12 @@ int main(void) {
 	double time_between_frames = 1.0 / frames_per_second * 1e6; // in micro seconds
 
 	int direction = right;
-	int last_direction = right;
+	int last_direction = last_direction;
 
 	bool done = false;
 	// la partie se termine par une victoire si le serpent occupe tout l'écran
 	while (!done) {
 		last_direction = direction;
-		// il y a un nombre maximal, N2, de nourriture qui apparait à des endroits aléatoires de la carte toutes les M3 secondes ;
 		struct timespec start, finish;
 		clock_gettime(CLOCK_MONOTONIC, &start);
 
@@ -129,11 +131,12 @@ int main(void) {
 			break;
 		}
 
+		// il y a un nombre maximal, N2, de nourriture qui apparait à des endroits aléatoires de la carte toutes les M3 secondes ;
 		gfx_present(ctxt);
 		done = quit_signal();
 
 		// Move and update snake display
-		struct element_t* new_head = new_position(direction, queue->tail);
+		struct coord_t* new_head = new_position(direction, queue->tail);
 		if (is_wall_detected(ctxt, new_head)) {
 			break;
 		}

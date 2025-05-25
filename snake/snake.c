@@ -9,9 +9,9 @@ struct queue_t* init_snake(const int width, const int height) {
     const int y = height / 2;
 
     // Initialize the snake's body (head, mid, tail) at the center of the grid
-    struct element_t* head = position_init(x, y);
-    struct element_t* mid = position_init(x, y - 1);
-    struct element_t* tail = position_init(x, y - 2);
+    struct coord_t* head = coord_init(x, y);
+    struct coord_t* mid = coord_init(x, y - 1);
+    struct coord_t* tail = coord_init(x, y - 2);
 
     // Enqueue the snake's body parts into the queue
     queue_enqueue(queue, tail);
@@ -21,7 +21,7 @@ struct queue_t* init_snake(const int width, const int height) {
     return queue;
 }
 
-struct element_t* new_position(enum direction dir, struct element_t* element) {
+struct coord_t* new_position(enum direction dir, struct coord_t* element) {
     int new_x = element->x;
     int new_y = element->y;
     const int dist = 4;
@@ -40,7 +40,7 @@ struct element_t* new_position(enum direction dir, struct element_t* element) {
         break;
     }
 
-    return position_init(new_x, new_y);
+    return coord_init(new_x, new_y);
 }
 
 
