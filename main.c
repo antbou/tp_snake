@@ -111,6 +111,20 @@ static bool is_food_detected(struct gfx_context_t* context, struct coord_t* pos)
 	return false;
 }
 
+/**
+ * Compute the time elapsed between two timespec structs in milliseconds.
+ *
+ * - tv_sec is in seconds → multiplied by 1000.0 to convert to milliseconds.
+ * - tv_nsec is in nanoseconds → divided by 1.0e6 to convert to milliseconds.
+ *
+ * Example:
+ *   2 sec and 500,000,000 ns → 2000 + 500 = 2500 ms
+ */
+double elapsed_ms(struct timespec* start, struct timespec* end) {
+	return (end->tv_sec - start->tv_sec) * 1000.0 +          // seconds → ms
+		(end->tv_nsec - start->tv_nsec) / 1.0e6;            // nanoseconds → ms
+}
+
 int main(void) {
 	const int width = 1920;
 	const int height = 1080;
@@ -139,13 +153,13 @@ int main(void) {
 
 	bool done = false;
 
-	struct timespec start, finish;
-	clock_gettime(CLOCK_MONOTONIC, &start);
-
-	struct timespec last_food_spawn_time;
-	clock_gettime(CLOCK_MONOTONIC, &last_food_spawn_time);
+	struct timespec last_food_time;
+	clock_gettime(CLOCK_MONOTONIC, &last_food_time);
 
 	while (!done) {
+		struct timespec frame_start_time, frame_end_time, current_time;
+		clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
+
 		last_direction = direction;
 
 		switch (gfx_keypressed()) {
@@ -172,8 +186,8 @@ int main(void) {
 		gfx_present(ctxt);
 		done = quit_signal();
 
-		struct coord_t* new_head = new_position(direction, queue->tail);
 		bool is_reverse_turn = (last_direction + direction == 3);
+		struct coord_t* new_head = new_position(direction, queue->tail);
 		if (is_wall_detected(ctxt, new_head) || is_reverse_turn) {
 			break;
 		}
@@ -187,30 +201,24 @@ int main(void) {
 			move_snake(ctxt, queue, new_head);
 		}
 
-		struct timespec now;
-		clock_gettime(CLOCK_MONOTONIC, &now);
-
-		double time_since_last_food = (now.tv_sec - last_food_spawn_time.tv_sec) * 1000.0;
-		time_since_last_food += (now.tv_nsec - last_food_spawn_time.tv_nsec) / 1.0e6;
+		clock_gettime(CLOCK_MONOTONIC, &current_time);
+		double time_since_last_food = elapsed_ms(&last_food_time, &current_time);
 
 		if (time_since_last_food >= FOOD_SPAWN_INTERVAL && food_counter < MAX_FOOD_COUNT) {
 			food_counter++;
 			struct coord_t* new_food = generate_food_coord(ctxt);
 			draw_food(ctxt, new_food);
 			coord_add(&food, new_food);
-			clock_gettime(CLOCK_MONOTONIC, &last_food_spawn_time);
+			clock_gettime(CLOCK_MONOTONIC, &last_food_time);
 		}
 
-		clock_gettime(CLOCK_MONOTONIC, &finish);
-		double mu_seconds_elapsed = finish.tv_sec - start.tv_sec;
-		mu_seconds_elapsed += (finish.tv_nsec - start.tv_nsec) / 1.0e6;
+		clock_gettime(CLOCK_MONOTONIC, &frame_end_time);
+		double frame_duration_ms = elapsed_ms(&frame_start_time, &frame_end_time);
+		double sleep_time_for_fps_limit = time_between_frames - frame_duration_ms;
 
-		double remaining_time = time_between_frames - mu_seconds_elapsed;
-		if (remaining_time > 0.0) {
-			usleep((int32_t)remaining_time);
+		if (sleep_time_for_fps_limit > 0.0) {
+			usleep((int32_t)sleep_time_for_fps_limit);
 		}
-
-		clock_gettime(CLOCK_MONOTONIC, &start);
 	}
 
 	coord_destroy(food);
