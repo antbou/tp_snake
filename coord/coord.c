@@ -25,8 +25,7 @@ void coord_destroy(struct coord_t* head) {
     }
 }
 
-void coord_add(struct coord_t** head, int x, int y) {
-    struct coord_t* new_element = coord_init(x, y);
+void coord_add(struct coord_t** head, struct coord_t* new_element) {
     if (!new_element) {
         return;
     }

@@ -3,13 +3,14 @@
 #include <time.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include "gfx/gfx.h"
 #include "snake/snake.h"
 #include "queue/queue.h"
 #include "coord/coord.h"
 
-#define max_food_count 5
-#define food_spawn_interval 1000000 // in microseconds
+#define MAX_FOOD_COUNT 5
+#define FOOD_SPAWN_INTERVAL 5000.0
 
 enum screen_color_state {
 	EMPTY = COLOR_BLACK,
@@ -49,6 +50,28 @@ static void draw_snake_initial(struct gfx_context_t* context, struct queue_t* qu
 	}
 }
 
+static void draw_food(struct gfx_context_t* context, struct coord_t* food) {
+	draw_pixel(context, food->x, food->y, 4, FOOD);
+}
+
+struct coord_t* generate_food_coord(struct gfx_context_t* context) {
+	const int x_min = 10, x_max = context->width - 10;
+	const int y_min = 10, y_max = context->height - 10;
+	const int zoom = 4;
+
+	struct coord_t* food = coord_init(x_min, y_min);
+	if (!food) {
+		return NULL;
+	}
+
+	do {
+		food->x = (rand() % ((x_max - x_min) / zoom)) * zoom + x_min;
+		food->y = (rand() % ((y_max - y_min) / zoom)) * zoom + y_min;
+	} while (gfx_getpixel(context, food->x, food->y) != EMPTY);
+
+	return food;
+}
+
 static void move_snake(struct gfx_context_t* context, struct queue_t* queue, struct coord_t* new_pos) {
 	draw_pixel(context, new_pos->x, new_pos->y, 4, SNAKE);
 	queue_enqueue(queue, new_pos);
@@ -83,34 +106,36 @@ int main(void) {
 		fprintf(stderr, "Graphics initialization failed!\n");
 		return EXIT_FAILURE;
 	}
+
+	srand(time(NULL));
 	gfx_clear(ctxt, EMPTY);
-	// l'écran de jeu est entouré d'une paroi
 	draw_border(ctxt, 10, width - 10, 10, height - 10);
 
-	// le serpent démarre avec une longueur de 3
 	struct queue_t* queue = init_snake(width, height);
-	// le serpent démarre en étant orienté vers la droite au milieu de l'écran de jeu;
+	int last_direction, direction = right;
 
 	// Draw initial snake
 	draw_snake_initial(ctxt, queue);
 
-	SDL_Keycode key = gfx_keypressed();
-	double frames_per_second = 24.0;
-	double time_between_frames = 1.0 / frames_per_second * 1e6; // in micro seconds
+	struct coord_t* food = generate_food_coord(ctxt);
+	draw_food(ctxt, food);
+	int food_counter = 1;
 
-	int direction = right;
-	int last_direction = last_direction;
+	const double frames_per_second = 24.0;
+	const double time_between_frames = 1.0 / frames_per_second * 1e6;
 
 	bool done = false;
-	// la partie se termine par une victoire si le serpent occupe tout l'écran
+
+	struct timespec start, finish;
+	clock_gettime(CLOCK_MONOTONIC, &start);
+
+	struct timespec last_food_spawn_time;
+	clock_gettime(CLOCK_MONOTONIC, &last_food_spawn_time);
+
 	while (!done) {
 		last_direction = direction;
-		struct timespec start, finish;
-		clock_gettime(CLOCK_MONOTONIC, &start);
 
-		key = gfx_keypressed();
-
-		switch (key) {
+		switch (gfx_keypressed()) {
 		case SDLK_UP:
 			direction = up;
 			printf("Up pressed\n");
@@ -131,30 +156,47 @@ int main(void) {
 			break;
 		}
 
-		// il y a un nombre maximal, N2, de nourriture qui apparait à des endroits aléatoires de la carte toutes les M3 secondes ;
 		gfx_present(ctxt);
 		done = quit_signal();
 
-		// Move and update snake display
 		struct coord_t* new_head = new_position(direction, queue->tail);
-		if (is_wall_detected(ctxt, new_head)) {
+		bool is_reverse_turn = (last_direction + direction == 3);
+		if (is_wall_detected(ctxt, new_head) || is_reverse_turn) {
 			break;
 		}
-		// demi tour immédiat
-		if (last_direction + direction == 3) {
-			break;
-		}
+
 		move_snake(ctxt, queue, new_head);
+
+		struct timespec now;
+		clock_gettime(CLOCK_MONOTONIC, &now);
+
+		double time_since_last_food = (now.tv_sec - last_food_spawn_time.tv_sec) * 1000.0;
+		time_since_last_food += (now.tv_nsec - last_food_spawn_time.tv_nsec) / 1.0e6;
+
+		printf("Time since last food: %f, Food counter: %d, FOOD_SPAWN_INTERVAL: %f\n",
+			time_since_last_food, food_counter, FOOD_SPAWN_INTERVAL);
+
+		if (time_since_last_food >= FOOD_SPAWN_INTERVAL && food_counter < MAX_FOOD_COUNT) {
+			food_counter++;
+			struct coord_t* new_food = generate_food_coord(ctxt);
+			draw_food(ctxt, new_food);
+			coord_add(&food, new_food);
+			clock_gettime(CLOCK_MONOTONIC, &last_food_spawn_time);
+		}
 
 		clock_gettime(CLOCK_MONOTONIC, &finish);
 		double mu_seconds_elapsed = finish.tv_sec - start.tv_sec;
 		mu_seconds_elapsed += (finish.tv_nsec - start.tv_nsec) / 1.0e6;
+
 		double remaining_time = time_between_frames - mu_seconds_elapsed;
 		if (remaining_time > 0.0) {
 			usleep((int32_t)remaining_time);
 		}
+
+		clock_gettime(CLOCK_MONOTONIC, &start);
 	}
 
+	coord_destroy(food);
 	queue_destroy(&queue);
 	gfx_destroy(ctxt);
 	return EXIT_SUCCESS;
