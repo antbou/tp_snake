@@ -54,9 +54,10 @@ static void draw_food(struct gfx_context_t* context, struct coord_t* food) {
 	draw_pixel(context, food->x, food->y, 4, FOOD);
 }
 
+
 struct coord_t* generate_food_coord(struct gfx_context_t* context) {
-	const int x_min = 10, x_max = context->width - 10;
-	const int y_min = 10, y_max = context->height - 10;
+	const int x_min = 12, x_max = context->width - 12;
+	const int y_min = 12, y_max = context->height - 12;
 	const int zoom = 4;
 
 	struct coord_t* food = coord_init(x_min, y_min);
@@ -98,6 +99,18 @@ static bool is_wall_detected(struct gfx_context_t* context, struct coord_t* new_
 	return false;
 }
 
+static bool is_food_detected(struct gfx_context_t* context, struct coord_t* pos) {
+	const int zoom = 4;
+	for (int ix = 0; ix < zoom; ix++) {
+		for (int iy = 0; iy < zoom; iy++) {
+			if (gfx_getpixel(context, pos->x + ix, pos->y + iy) == FOOD) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 int main(void) {
 	const int width = 1920;
 	const int height = 1080;
@@ -109,7 +122,7 @@ int main(void) {
 
 	srand(time(NULL));
 	gfx_clear(ctxt, EMPTY);
-	draw_border(ctxt, 10, width - 10, 10, height - 10);
+	draw_border(ctxt, 8, width - 8, 8, height - 8);
 
 	struct queue_t* queue = init_snake(width, height);
 	int last_direction, direction = right;
@@ -164,17 +177,21 @@ int main(void) {
 		if (is_wall_detected(ctxt, new_head) || is_reverse_turn) {
 			break;
 		}
+		if (is_food_detected(ctxt, new_head)) {
+			printf("Food eaten!\n");
 
-		move_snake(ctxt, queue, new_head);
+			coord_remove_at(&food, new_head->x, new_head->y);
+			draw_pixel(ctxt, new_head->x, new_head->y, 4, SNAKE);
+			queue_enqueue(queue, new_head);
+		} else {
+			move_snake(ctxt, queue, new_head);
+		}
 
 		struct timespec now;
 		clock_gettime(CLOCK_MONOTONIC, &now);
 
 		double time_since_last_food = (now.tv_sec - last_food_spawn_time.tv_sec) * 1000.0;
 		time_since_last_food += (now.tv_nsec - last_food_spawn_time.tv_nsec) / 1.0e6;
-
-		printf("Time since last food: %f, Food counter: %d, FOOD_SPAWN_INTERVAL: %f\n",
-			time_since_last_food, food_counter, FOOD_SPAWN_INTERVAL);
 
 		if (time_since_last_food >= FOOD_SPAWN_INTERVAL && food_counter < MAX_FOOD_COUNT) {
 			food_counter++;

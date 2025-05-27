@@ -13,4 +13,5 @@ struct coord_t {
 struct coord_t* coord_init(int x, int y);
 void coord_destroy(struct coord_t* head);
 void coord_add(struct coord_t** head, struct coord_t* new_element);
+void coord_remove_at(struct coord_t** head, int x, int y);
 #endif
