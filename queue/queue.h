@@ -6,6 +6,7 @@
 struct queue_t {
     struct coord_t* head;
     struct coord_t* tail;
+    int size;
 };
 
 struct coord_t* coord_init(int x, int y);

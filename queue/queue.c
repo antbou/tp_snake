@@ -16,6 +16,7 @@ struct queue_t* queue_create() {
     }
     queue->head = NULL;
     queue->tail = NULL;
+    queue->tail = 0;
     return queue;
 }
 
@@ -54,6 +55,7 @@ bool queue_enqueue(struct queue_t* queue, struct coord_t* element) {
         // 2. updates the tail pointer to mark the new element as the last in the queue
         queue->tail = element;
     }
+    queue->size++;
     return true;
 }
 
@@ -68,6 +70,7 @@ bool queue_dequeue(struct queue_t* queue) {
     if (!queue->head) {
         queue->tail = NULL;
     }
+    queue->size--;
 
     free(temp);
     return true;

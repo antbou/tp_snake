@@ -12,6 +12,9 @@
 #define MAX_FOOD_COUNT 5
 #define FOOD_SPAWN_INTERVAL 5000.0
 
+#define BORDER_OFFSET 8
+#define ZOOM 4
+
 enum screen_color_state {
 	EMPTY = COLOR_BLACK,
 	SNAKE = COLOR_WHITE,
@@ -58,7 +61,14 @@ static void draw_food(struct gfx_context_t* context, struct coord_t* food) {
 struct coord_t* generate_food_coord(struct gfx_context_t* context) {
 	const int x_min = 12, x_max = context->width - 12;
 	const int y_min = 12, y_max = context->height - 12;
-	const int zoom = 4;
+
+	int x_range = (x_max - x_min) / ZOOM;
+	int y_range = (y_max - y_min) / ZOOM;
+
+	if (x_range <= 0 || y_range <= 0) {
+		fprintf(stderr, "Error: playable area too small to place food.\n");
+		return NULL;
+	}
 
 	struct coord_t* food = coord_init(x_min, y_min);
 	if (!food) {
@@ -66,8 +76,8 @@ struct coord_t* generate_food_coord(struct gfx_context_t* context) {
 	}
 
 	do {
-		food->x = (rand() % ((x_max - x_min) / zoom)) * zoom + x_min;
-		food->y = (rand() % ((y_max - y_min) / zoom)) * zoom + y_min;
+		food->x = (rand() % x_range) * ZOOM + x_min;
+		food->y = (rand() % y_range) * ZOOM + y_min;
 	} while (gfx_getpixel(context, food->x, food->y) != EMPTY);
 
 	return food;
@@ -136,11 +146,20 @@ int main(void) {
 
 	srand(time(NULL));
 	gfx_clear(ctxt, EMPTY);
-	draw_border(ctxt, 8, width - 8, 8, height - 8);
 
-	struct queue_t* queue = init_snake(width, height);
+	int x_min = BORDER_OFFSET;
+	int x_max = width - BORDER_OFFSET;
+	int y_min = BORDER_OFFSET;
+	int y_max = height - BORDER_OFFSET;
+	draw_border(ctxt, x_min, x_max, y_min, y_max);
+
+
+	int playable_width = x_max - x_min;
+	int playable_height = y_max - y_min;
+	int max_snake_size = (playable_width / ZOOM) * (playable_height / ZOOM);
+
 	int last_direction, direction = right;
-
+	struct queue_t* queue = init_snake(x_max, y_max);
 	// Draw initial snake
 	draw_snake_initial(ctxt, queue);
 
@@ -185,6 +204,21 @@ int main(void) {
 
 		gfx_present(ctxt);
 		done = quit_signal();
+		bool has_snake_won = queue->size >= max_snake_size;
+
+		if (has_snake_won) {
+			printf("You win\n");
+			break;
+		}
+		clock_gettime(CLOCK_MONOTONIC, &current_time);
+		double time_since_last_food = elapsed_ms(&last_food_time, &current_time);
+		if ((time_since_last_food >= FOOD_SPAWN_INTERVAL && food_counter < MAX_FOOD_COUNT) || food_counter == 0) {
+			food_counter++;
+			struct coord_t* new_food = generate_food_coord(ctxt);
+			draw_food(ctxt, new_food);
+			coord_add(&food, new_food);
+			clock_gettime(CLOCK_MONOTONIC, &last_food_time);
+		}
 
 		bool is_reverse_turn = (last_direction + direction == 3);
 		struct coord_t* new_head = new_position(direction, queue->tail);
@@ -201,16 +235,7 @@ int main(void) {
 			move_snake(ctxt, queue, new_head);
 		}
 
-		clock_gettime(CLOCK_MONOTONIC, &current_time);
-		double time_since_last_food = elapsed_ms(&last_food_time, &current_time);
 
-		if (time_since_last_food >= FOOD_SPAWN_INTERVAL && food_counter < MAX_FOOD_COUNT) {
-			food_counter++;
-			struct coord_t* new_food = generate_food_coord(ctxt);
-			draw_food(ctxt, new_food);
-			coord_add(&food, new_food);
-			clock_gettime(CLOCK_MONOTONIC, &last_food_time);
-		}
 
 		clock_gettime(CLOCK_MONOTONIC, &frame_end_time);
 		double frame_duration_ms = elapsed_ms(&frame_start_time, &frame_end_time);
