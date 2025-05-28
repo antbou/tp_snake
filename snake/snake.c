@@ -8,15 +8,13 @@ struct queue_t* init_snake(const int width, const int height) {
     const int x = width / 2;
     const int y = height / 2;
 
-    // Initialize the snake's body (head, mid, tail) at the center of the grid
-    struct coord_t* head = coord_init(x, y);
-    struct coord_t* mid = coord_init(x, y - 1);
-    struct coord_t* tail = coord_init(x, y - 2);
-
-    // Enqueue the snake's body parts into the queue
-    queue_enqueue(queue, tail);
-    queue_enqueue(queue, mid);
-    queue_enqueue(queue, head);
+    // Initialize the snake's body dynamically at the center of the grid
+    // The head of the snake is at the front of the queue
+    const int initial_length = 3; // Initial length of the snake
+    for (int i = 0; i < initial_length; i++) {
+        struct coord_t* segment = coord_init(x, y - i);
+        queue_enqueue(queue, segment);
+    }
 
     return queue;
 }
@@ -44,4 +42,4 @@ struct coord_t* new_position(enum direction dir, struct coord_t* element) {
 }
 
 
-// lorsque le serpent “mange” de la nourriture sa longueur augmente de un et la nourriture disparait ;
+// lorsque le serpent “mange” de la nourriture sa longueur augmente de un et la nourriture disparait

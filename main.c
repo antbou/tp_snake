@@ -121,6 +121,17 @@ static bool is_food_detected(struct gfx_context_t* context, struct coord_t* pos)
 	return false;
 }
 
+static bool is_snake_self_collision(struct gfx_context_t* context, struct coord_t* pos) {
+	for (int ix = 0; ix < ZOOM; ix++) {
+		for (int iy = 0; iy < ZOOM; iy++) {
+			if (gfx_getpixel(context, pos->x + ix, pos->y + iy) == SNAKE) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 /**
  * Compute the time elapsed between two timespec structs in milliseconds.
  *
@@ -138,6 +149,13 @@ double elapsed_ms(struct timespec* start, struct timespec* end) {
 int main(void) {
 	const int width = 1920;
 	const int height = 1080;
+
+	if ((width - 2 * BORDER_OFFSET) % ZOOM != 0 ||
+		(height - 2 * BORDER_OFFSET) % ZOOM != 0) {
+		fprintf(stderr, "Error: screen dimensions must align with zoom (%d).\n", ZOOM);
+		return EXIT_FAILURE;
+	}
+
 	struct gfx_context_t* ctxt = gfx_create("Snake - TP", width, height);
 	if (!ctxt) {
 		fprintf(stderr, "Graphics initialization failed!\n");
@@ -222,7 +240,7 @@ int main(void) {
 
 		bool is_reverse_turn = (last_direction + direction == 3);
 		struct coord_t* new_head = new_position(direction, queue->tail);
-		if (is_wall_detected(ctxt, new_head) || is_reverse_turn) {
+		if (is_wall_detected(ctxt, new_head) || is_reverse_turn || is_snake_self_collision(ctxt, new_head)) {
 			break;
 		}
 		if (is_food_detected(ctxt, new_head)) {
