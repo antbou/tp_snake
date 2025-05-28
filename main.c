@@ -10,7 +10,8 @@
 #include "coord/coord.h"
 
 #define MAX_FOOD_COUNT 5
-#define FOOD_SPAWN_INTERVAL 5000.0
+#define FOOD_SPAWN_INTERVAL 5000.0 // millisecondes
+#define SNAKE_MOVE_INTERVAL 1.0  // millisecondes
 
 #define BORDER_OFFSET 8
 #define ZOOM 4
@@ -94,7 +95,7 @@ static void move_snake(struct gfx_context_t* context, struct queue_t* queue, str
 
 	// Remove tail
 	queue_dequeue(queue);
-	draw_pixel(context, tail_x, tail_y, 4, EMPTY);
+	draw_pixel(context, tail_x, tail_y, ZOOM, EMPTY);
 }
 
 static bool is_wall_detected(struct gfx_context_t* context, struct coord_t* new_pos) {
@@ -193,6 +194,8 @@ int main(void) {
 	struct timespec last_food_time;
 	clock_gettime(CLOCK_MONOTONIC, &last_food_time);
 
+	static struct timespec last_move_time;
+	static bool first_move = true;
 	while (!done) {
 		struct timespec frame_start_time, frame_end_time, current_time;
 		clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
@@ -238,22 +241,31 @@ int main(void) {
 			clock_gettime(CLOCK_MONOTONIC, &last_food_time);
 		}
 
-		bool is_reverse_turn = (last_direction + direction == 3);
-		struct coord_t* new_head = new_position(direction, queue->tail);
-		if (is_wall_detected(ctxt, new_head) || is_reverse_turn || is_snake_self_collision(ctxt, new_head)) {
-			break;
-		}
-		if (is_food_detected(ctxt, new_head)) {
-			printf("Food eaten!\n");
-
-			coord_remove_at(&food, new_head->x, new_head->y);
-			draw_pixel(ctxt, new_head->x, new_head->y, 4, SNAKE);
-			queue_enqueue(queue, new_head);
-		} else {
-			move_snake(ctxt, queue, new_head);
+		if (first_move) {
+			clock_gettime(CLOCK_MONOTONIC, &last_move_time);
+			first_move = false;
+			continue;
 		}
 
-
+		double time_since_last_move = elapsed_ms(&last_move_time, &current_time);
+		if (time_since_last_move >= SNAKE_MOVE_INTERVAL) {
+			bool is_reverse_turn = (last_direction + direction == 3);
+			struct coord_t* new_head = new_position(direction, queue->tail);
+			if (is_wall_detected(ctxt, new_head) || is_reverse_turn || is_snake_self_collision(ctxt, new_head)) {
+				break;
+			}
+			if (is_food_detected(ctxt, new_head)) {
+				printf("Food eaten!\n");
+				coord_remove_at(&food, new_head->x, new_head->y);
+				draw_pixel(ctxt, new_head->x, new_head->y, 4, EMPTY);
+				draw_pixel(ctxt, new_head->x, new_head->y, 4, SNAKE);
+				queue_enqueue(queue, new_head);
+				food_counter--;
+			} else {
+				move_snake(ctxt, queue, new_head);
+			}
+			clock_gettime(CLOCK_MONOTONIC, &last_move_time);
+		}
 
 		clock_gettime(CLOCK_MONOTONIC, &frame_end_time);
 		double frame_duration_ms = elapsed_ms(&frame_start_time, &frame_end_time);
