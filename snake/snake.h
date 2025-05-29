@@ -10,7 +10,7 @@ enum direction {
     right
 };
 
-struct queue_t* init_snake(int width, int height);
-struct coord_t* new_position(enum direction dir, struct coord_t* element);
+struct queue_t* init_snake(const int width, const int height, const int zoom);
+struct coord_t* new_position(enum direction dir, struct coord_t* element, const int zoom);
 
 #endif

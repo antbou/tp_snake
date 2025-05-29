@@ -9,12 +9,12 @@
 #include "queue/queue.h"
 #include "coord/coord.h"
 
-#define MAX_FOOD_COUNT 5
+#define MAX_FOOD_COUNT 50
 #define FOOD_SPAWN_INTERVAL 5000.0 // millisecondes
-#define SNAKE_MOVE_INTERVAL 1.0  // millisecondes
+#define SNAKE_MOVE_INTERVAL 70.0  // millisecondes
 
-#define BORDER_OFFSET 8
-#define ZOOM 4
+#define BORDER_OFFSET 16
+#define ZOOM 8
 
 enum screen_color_state {
 	EMPTY = COLOR_BLACK,
@@ -49,19 +49,22 @@ static void draw_pixel(struct gfx_context_t* context, int x, int y, int zoom, ui
 static void draw_snake_initial(struct gfx_context_t* context, struct queue_t* queue) {
 	struct coord_t* current = queue->head;
 	while (current != NULL) {
-		draw_pixel(context, current->x, current->y, 4, SNAKE);
+		draw_pixel(context, current->x, current->y, ZOOM, SNAKE);
 		current = current->next;
 	}
 }
 
 static void draw_food(struct gfx_context_t* context, struct coord_t* food) {
-	draw_pixel(context, food->x, food->y, 4, FOOD);
+	draw_pixel(context, food->x, food->y, ZOOM, FOOD);
 }
 
 
 struct coord_t* generate_food_coord(struct gfx_context_t* context) {
-	const int x_min = 12, x_max = context->width - 12;
-	const int y_min = 12, y_max = context->height - 12;
+	// Align the minimum coordinates to the ZOOM grid
+	const int x_min = ((BORDER_OFFSET + ZOOM - 1) / ZOOM) * ZOOM;
+	const int y_min = ((BORDER_OFFSET + ZOOM - 1) / ZOOM) * ZOOM;
+	const int x_max = context->width - BORDER_OFFSET;
+	const int y_max = context->height - BORDER_OFFSET;
 
 	int x_range = (x_max - x_min) / ZOOM;
 	int y_range = (y_max - y_min) / ZOOM;
@@ -85,7 +88,7 @@ struct coord_t* generate_food_coord(struct gfx_context_t* context) {
 }
 
 static void move_snake(struct gfx_context_t* context, struct queue_t* queue, struct coord_t* new_pos) {
-	draw_pixel(context, new_pos->x, new_pos->y, 4, SNAKE);
+	draw_pixel(context, new_pos->x, new_pos->y, ZOOM, SNAKE);
 	queue_enqueue(queue, new_pos);
 
 	// Get tail position before removing it
@@ -99,7 +102,7 @@ static void move_snake(struct gfx_context_t* context, struct queue_t* queue, str
 }
 
 static bool is_wall_detected(struct gfx_context_t* context, struct coord_t* new_pos) {
-	const int zoom = 4;
+	const int zoom = ZOOM;
 	for (int ix = 0; ix < zoom; ix++) {
 		for (int iy = 0; iy < zoom; iy++) {
 			if (gfx_getpixel(context, new_pos->x + ix, new_pos->y + iy) == WALL) {
@@ -111,7 +114,7 @@ static bool is_wall_detected(struct gfx_context_t* context, struct coord_t* new_
 }
 
 static bool is_food_detected(struct gfx_context_t* context, struct coord_t* pos) {
-	const int zoom = 4;
+	const int zoom = ZOOM;
 	for (int ix = 0; ix < zoom; ix++) {
 		for (int iy = 0; iy < zoom; iy++) {
 			if (gfx_getpixel(context, pos->x + ix, pos->y + iy) == FOOD) {
@@ -178,7 +181,7 @@ int main(void) {
 	int max_snake_size = (playable_width / ZOOM) * (playable_height / ZOOM);
 
 	int last_direction, direction = right;
-	struct queue_t* queue = init_snake(x_max, y_max);
+	struct queue_t* queue = init_snake(x_max, y_max, ZOOM);
 	// Draw initial snake
 	draw_snake_initial(ctxt, queue);
 
@@ -186,7 +189,7 @@ int main(void) {
 	draw_food(ctxt, food);
 	int food_counter = 1;
 
-	const double frames_per_second = 24.0;
+	const double frames_per_second = 60.0;
 	const double time_between_frames = 1.0 / frames_per_second * 1e6;
 
 	bool done = false;
@@ -250,15 +253,27 @@ int main(void) {
 		double time_since_last_move = elapsed_ms(&last_move_time, &current_time);
 		if (time_since_last_move >= SNAKE_MOVE_INTERVAL) {
 			bool is_reverse_turn = (last_direction + direction == 3);
-			struct coord_t* new_head = new_position(direction, queue->tail);
+			printf("test");
+			struct coord_t* new_head = new_position(direction, queue->tail, ZOOM);
+			printf("test2");
+
+			bool wall_detected = is_wall_detected(ctxt, new_head);
+			bool reverse_turn = is_reverse_turn;
+			bool snake_collision = is_snake_self_collision(ctxt, new_head);
+
+			printf("is_wall_detected: %d\n", wall_detected);
+			printf("is_reverse_turn: %d\n", reverse_turn);
+			printf("is_snake_self_collision: %d\n", snake_collision);
+
 			if (is_wall_detected(ctxt, new_head) || is_reverse_turn || is_snake_self_collision(ctxt, new_head)) {
+				printf("you are dead");
 				break;
 			}
 			if (is_food_detected(ctxt, new_head)) {
 				printf("Food eaten!\n");
 				coord_remove_at(&food, new_head->x, new_head->y);
-				draw_pixel(ctxt, new_head->x, new_head->y, 4, EMPTY);
-				draw_pixel(ctxt, new_head->x, new_head->y, 4, SNAKE);
+				draw_pixel(ctxt, new_head->x, new_head->y, ZOOM, EMPTY);
+				draw_pixel(ctxt, new_head->x, new_head->y, ZOOM, SNAKE);
 				queue_enqueue(queue, new_head);
 				food_counter--;
 			} else {
