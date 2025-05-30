@@ -23,6 +23,13 @@ enum screen_color_state {
 	WALL = COLOR_BLUE
 };
 
+enum collision_type {
+	NO_COLLISION,
+	WALL_COLLISION,
+	SNAKE_COLLISION,
+	FOOD_COLLISION
+};
+
 static void draw_border(struct gfx_context_t* context, int x0, int x1, int y0, int y1) {
 	for (int ix = x0; ix < x1; ++ix) {
 		gfx_putpixel(context, ix, y0, WALL);
@@ -101,39 +108,25 @@ static void move_snake(struct gfx_context_t* context, struct queue_t* queue, str
 	draw_pixel(context, tail_x, tail_y, ZOOM, EMPTY);
 }
 
-static bool is_wall_detected(struct gfx_context_t* context, struct coord_t* new_pos) {
+static enum collision_type check_collision(struct gfx_context_t* context, struct coord_t* pos, uint32_t target_color) {
 	const int zoom = ZOOM;
 	for (int ix = 0; ix < zoom; ix++) {
 		for (int iy = 0; iy < zoom; iy++) {
-			if (gfx_getpixel(context, new_pos->x + ix, new_pos->y + iy) == WALL) {
-				return true;
+			if (gfx_getpixel(context, pos->x + ix, pos->y + iy) == target_color) {
+				switch (target_color) {
+				case WALL:
+					return WALL_COLLISION;
+				case SNAKE:
+					return SNAKE_COLLISION;
+				case FOOD:
+					return FOOD_COLLISION;
+				default:
+					return NO_COLLISION;
+				}
 			}
 		}
 	}
-	return false;
-}
-
-static bool is_food_detected(struct gfx_context_t* context, struct coord_t* pos) {
-	const int zoom = ZOOM;
-	for (int ix = 0; ix < zoom; ix++) {
-		for (int iy = 0; iy < zoom; iy++) {
-			if (gfx_getpixel(context, pos->x + ix, pos->y + iy) == FOOD) {
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-static bool is_snake_self_collision(struct gfx_context_t* context, struct coord_t* pos) {
-	for (int ix = 0; ix < ZOOM; ix++) {
-		for (int iy = 0; iy < ZOOM; iy++) {
-			if (gfx_getpixel(context, pos->x + ix, pos->y + iy) == SNAKE) {
-				return true;
-			}
-		}
-	}
-	return false;
+	return NO_COLLISION;
 }
 
 /**
@@ -253,23 +246,22 @@ int main(void) {
 		double time_since_last_move = elapsed_ms(&last_move_time, &current_time);
 		if (time_since_last_move >= SNAKE_MOVE_INTERVAL) {
 			bool is_reverse_turn = (last_direction + direction == 3);
-			printf("test");
 			struct coord_t* new_head = new_position(direction, queue->tail, ZOOM);
-			printf("test2");
 
-			bool wall_detected = is_wall_detected(ctxt, new_head);
-			bool reverse_turn = is_reverse_turn;
-			bool snake_collision = is_snake_self_collision(ctxt, new_head);
-
-			printf("is_wall_detected: %d\n", wall_detected);
-			printf("is_reverse_turn: %d\n", reverse_turn);
-			printf("is_snake_self_collision: %d\n", snake_collision);
-
-			if (is_wall_detected(ctxt, new_head) || is_reverse_turn || is_snake_self_collision(ctxt, new_head)) {
-				printf("you are dead");
+			enum collision_type collision = check_collision(ctxt, new_head, WALL);
+			if (collision == WALL_COLLISION || is_reverse_turn) {
+				printf("Wall collision or reverse turn detected\n");
 				break;
 			}
-			if (is_food_detected(ctxt, new_head)) {
+
+			collision = check_collision(ctxt, new_head, SNAKE);
+			if (collision == SNAKE_COLLISION) {
+				printf("Snake self-collision detected\n");
+				break;
+			}
+
+			collision = check_collision(ctxt, new_head, FOOD);
+			if (collision == FOOD_COLLISION) {
 				printf("Food eaten!\n");
 				coord_remove_at(&food, new_head->x, new_head->y);
 				draw_pixel(ctxt, new_head->x, new_head->y, ZOOM, EMPTY);
