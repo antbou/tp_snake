@@ -1,22 +1,25 @@
 #include "menu.h"
-
-#include <unistd.h>
 #include <SDL2/SDL.h>
-#include "../gfx/gfx.h"
+#include <stdbool.h>
 
 enum difficulty_level show_start_screen(struct gfx_context_t* ctxt) {
     enum difficulty_level selection = NORMAL;
     bool choosing = true;
 
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color red = { 255, 0, 0, 255 };
+    SDL_Color blue = { 0, 0, 255, 255 };
+
     while (choosing) {
         gfx_clear(ctxt, COLOR_BLACK);
-        draw_text(ctxt, "EASY", 860, 250, 2, (selection == EASY ? COLOR_RED : COLOR_WHITE));
-        draw_text(ctxt, "NORMAL", 860, 310, 2, (selection == NORMAL ? COLOR_RED : COLOR_WHITE));
-        draw_text(ctxt, "HARD", 860, 370, 2, (selection == HARD ? COLOR_RED : COLOR_WHITE));
-        draw_text(ctxt, "PRESS ENTER", 800, 450, 2, COLOR_BLUE);
-        draw_text(ctxt, "SNAKE", 880, 100, 3, COLOR_WHITE);
 
-        gfx_present(ctxt);
+        draw_text_ttf(ctxt, "SNAKE", 860, 100, 48, white, "assets/PixelOperatorMono8.ttf");
+        draw_text_ttf(ctxt, "EASY", 860, 250, 32, selection == EASY ? red : white, "assets/PixelOperatorMono8.ttf");
+        draw_text_ttf(ctxt, "NORMAL", 860, 310, 32, selection == NORMAL ? red : white, "assets/PixelOperatorMono8.ttf");
+        draw_text_ttf(ctxt, "HARD", 860, 370, 32, selection == HARD ? red : white, "assets/PixelOperatorMono8.ttf");
+        draw_text_ttf(ctxt, "PRESS ENTER", 860, 450, 24, blue, "assets/PixelOperatorMono8.ttf");
+
+        SDL_RenderPresent(ctxt->renderer);
 
         SDL_Keycode key = gfx_keypressed();
         switch (key) {
@@ -30,11 +33,13 @@ enum difficulty_level show_start_screen(struct gfx_context_t* ctxt) {
         case SDLK_SPACE:
             choosing = false;
             break;
-        case SDLK_ESCAPE:
-            exit(EXIT_SUCCESS);
         }
 
-        usleep(120000);
+        if (quit_signal()) {
+            return LEAVE;
+        }
+
+        usleep(120000); // Add a short delay to prevent the menu from scrolling too fast when holding a key
     }
 
     return selection;

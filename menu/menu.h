@@ -6,7 +6,8 @@
 enum difficulty_level {
     EASY,
     NORMAL,
-    HARD
+    HARD,
+    LEAVE,
 };
 
 enum difficulty_level show_start_screen(struct gfx_context_t* ctxt);

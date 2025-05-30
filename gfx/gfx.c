@@ -13,7 +13,7 @@
 #include "gfx.h"
 
 #include <assert.h>
-#include <ctype.h>
+#include <SDL2/SDL_ttf.h>
 
 /// Create a fullscreen graphic window.
 /// @param title Title of the window.
@@ -31,6 +31,8 @@ struct gfx_context_t* gfx_create(char* title, uint32_t width, uint32_t height) {
 		renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
 	uint32_t* pixels = malloc(width * height * sizeof(uint32_t));
 	struct gfx_context_t* ctxt = malloc(sizeof(struct gfx_context_t));
+	if (TTF_Init() == -1)
+		goto error;
 
 	if (!window || !renderer || !texture || !pixels || !ctxt)
 		goto error;
@@ -100,6 +102,7 @@ void gfx_destroy(struct gfx_context_t* ctxt) {
 	ctxt->renderer = NULL;
 	ctxt->window = NULL;
 	ctxt->pixels = NULL;
+	TTF_Quit();
 	SDL_Quit();
 	free(ctxt);
 }
@@ -159,54 +162,33 @@ void draw_pixel(struct gfx_context_t* context, int x, int y, int zoom, uint32_t 
 	}
 }
 
-void draw_letter(struct gfx_context_t* ctxt, char c, int x, int y, int zoom, uint32_t color) {
-	// Lettres 5x5 - https://www.eevblog.com/forum/projects/5x7-or-7x9-dot-matrix-font-files-in-cc/
-	static const uint8_t LETTERS[26][5] = {
-		{0b01110, 0b10001, 0b11111, 0b10001, 0b10001}, // A
-		{0b11110, 0b10001, 0b11110, 0b10001, 0b11110}, // B
-		{0b01110, 0b10001, 0b10000, 0b10001, 0b01110}, // C
-		{0b11110, 0b10001, 0b10001, 0b10001, 0b11110}, // D
-		{0b11111, 0b10000, 0b11110, 0b10000, 0b11111}, // E
-		{0b11111, 0b10000, 0b11110, 0b10000, 0b10000}, // F
-		{0b01110, 0b10000, 0b10111, 0b10001, 0b01110}, // G
-		{0b10001, 0b10001, 0b11111, 0b10001, 0b10001}, // H
-		{0b01110, 0b00100, 0b00100, 0b00100, 0b01110}, // I
-		{0b00111, 0b00010, 0b00010, 0b10010, 0b01100}, // J
-		{0b10001, 0b10010, 0b11100, 0b10010, 0b10001}, // K
-		{0b10000, 0b10000, 0b10000, 0b10000, 0b11111}, // L
-		{0b10001, 0b11011, 0b10101, 0b10001, 0b10001}, // M
-		{0b10001, 0b11001, 0b10101, 0b10011, 0b10001}, // N
-		{0b01110, 0b10001, 0b10001, 0b10001, 0b01110}, // O
-		{0b11110, 0b10001, 0b11110, 0b10000, 0b10000}, // P
-		{0b01110, 0b10001, 0b10001, 0b10011, 0b01111}, // Q
-		{0b11110, 0b10001, 0b11110, 0b10010, 0b10001}, // R
-		{0b01111, 0b10000, 0b01110, 0b00001, 0b11110}, // S
-		{0b11111, 0b00100, 0b00100, 0b00100, 0b00100}, // T
-		{0b10001, 0b10001, 0b10001, 0b10001, 0b01110}, // U
-		{0b10001, 0b10001, 0b10001, 0b01010, 0b00100}, // V
-		{0b10001, 0b10001, 0b10101, 0b11011, 0b10001}, // W
-		{0b10001, 0b01010, 0b00100, 0b01010, 0b10001}, // X
-		{0b10001, 0b01010, 0b00100, 0b00100, 0b00100}, // Y
-		{0b11111, 0b00010, 0b00100, 0b01000, 0b11111}, // Z
-	};
-
-	c = toupper((unsigned char)c);
-	if (c < 'A' || c > 'Z') return;
-
-	const uint8_t* bitmap = LETTERS[c - 'A'];
-	for (int row = 0; row < 5; ++row) {
-		for (int col = 0; col < 5; ++col) {
-			if ((bitmap[row] >> (4 - col)) & 1) {
-				draw_pixel(ctxt, x + col * zoom, y + row * zoom, zoom, color);
-			}
-		}
+// https://stackoverflow.com/questions/22886500/how-to-render-text-in-sdl2
+void draw_text_ttf(struct gfx_context_t* ctxt, const char* text, int x, int y, int size, SDL_Color color, const char* font_path) {
+	TTF_Font* font = TTF_OpenFont(font_path, size);
+	if (!font) {
+		fprintf(stderr, "Failed to load font: %s\n", TTF_GetError());
+		return;
 	}
-}
 
-void draw_text(struct gfx_context_t* ctxt, const char* str, int x, int y, int zoom, uint32_t color) {
-	for (int i = 0; str[i]; ++i) {
-		if (str[i] != ' ') {
-			draw_letter(ctxt, str[i], x + i * (zoom * 6), y, zoom, color);
-		}
+	SDL_Surface* surface = TTF_RenderText_Solid(font, text, color);
+	if (!surface) {
+		fprintf(stderr, "Failed to render text: %s\n", TTF_GetError());
+		TTF_CloseFont(font);
+		return;
 	}
+
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(ctxt->renderer, surface);
+	SDL_FreeSurface(surface);
+	if (!texture) {
+		fprintf(stderr, "Failed to create texture: %s\n", SDL_GetError());
+		TTF_CloseFont(font);
+		return;
+	}
+
+	SDL_Rect dst = { x, y, 0, 0 };
+	SDL_QueryTexture(texture, NULL, NULL, &dst.w, &dst.h);
+	SDL_RenderCopy(ctxt->renderer, texture, NULL, &dst);
+
+	SDL_DestroyTexture(texture);
+	TTF_CloseFont(font);
 }

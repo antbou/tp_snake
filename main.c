@@ -148,6 +148,7 @@ int main(void) {
 
 	const int width = 1920;
 	const int height = 1080;
+	bool done = false;
 
 	if ((width - 2 * BORDER_OFFSET) % ZOOM != 0 ||
 		(height - 2 * BORDER_OFFSET) % ZOOM != 0) {
@@ -160,7 +161,6 @@ int main(void) {
 		fprintf(stderr, "Graphics initialization failed!\n");
 		return EXIT_FAILURE;
 	}
-
 	enum difficulty_level difficulty = show_start_screen(ctxt);
 	double snake_move_interval = 0.0;
 
@@ -173,6 +173,9 @@ int main(void) {
 		break;
 	case HARD:
 		snake_move_interval = 40.0;
+		break;
+	case LEAVE:
+		done = true;
 		break;
 	}
 
@@ -191,8 +194,6 @@ int main(void) {
 	int border_bottom = y_max + ZOOM + 1;
 	draw_border(ctxt, border_left, border_right, border_top, border_bottom);
 
-
-
 	int playable_width = x_max - x_min;
 	int playable_height = y_max - y_min;
 	int max_snake_size = (playable_width / ZOOM) * (playable_height / ZOOM);
@@ -210,8 +211,6 @@ int main(void) {
 
 	const double frames_per_second = 60.0;
 	const double time_between_frames = 1.0 / frames_per_second * 1e6;
-
-	bool done = false;
 
 	struct timespec last_food_time;
 	clock_gettime(CLOCK_MONOTONIC, &last_food_time);
