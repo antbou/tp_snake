@@ -236,6 +236,7 @@ int main(void) {
 			break;
 		}
 
+		// leak from gfx_present
 		gfx_present(ctxt);
 		done = quit_signal();
 		bool has_snake_won = queue->size >= max_snake_size;
