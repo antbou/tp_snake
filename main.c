@@ -171,14 +171,15 @@ int main(void) {
 	gfx_clear(ctxt, EMPTY);
 
 	int x_min = (BORDER_OFFSET / ZOOM) * ZOOM;
-	int x_max = (width - BORDER_OFFSET) / ZOOM * ZOOM;
 	int y_min = (BORDER_OFFSET / ZOOM) * ZOOM;
-	int y_max = (height - BORDER_OFFSET) / ZOOM * ZOOM;
+	int x_max = width - BORDER_OFFSET - ZOOM;
+	int y_max = height - BORDER_OFFSET - ZOOM;
 
-	int border_left = x_min + ZOOM - 1;
-	int border_right = x_max - ZOOM;
-	int border_top = y_min + ZOOM - 1;
-	int border_bottom = y_max - ZOOM;
+	// Place the borders just outside the playable area
+	int border_left = x_min - 1;
+	int border_right = x_max + ZOOM + 1;
+	int border_top = y_min - 1;
+	int border_bottom = y_max + ZOOM + 1;
 	draw_border(ctxt, border_left, border_right, border_top, border_bottom);
 
 
