@@ -1,6 +1,6 @@
 CC      = gcc -std=gnu11
 CFLAGS  = -Wall -Wextra -pedantic -g
-LDLIBS  = -lSDL2
+LDLIBS  = -lSDL2 -lSDL2_ttf
 LDFLAGS = -fsanitize=address -fsanitize=leak -fsanitize=undefined
 
 .PHONY: clean run all
