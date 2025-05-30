@@ -192,8 +192,10 @@ int main(void) {
 	// Draw initial snake
 	draw_snake_initial(ctxt, queue);
 
-	struct coord_t* food = generate_food_coord(ctxt);
-	draw_food(ctxt, food);
+	struct coord_t* new_food = generate_food_coord(ctxt);
+	draw_food(ctxt, new_food);
+	free(new_food);
+
 	int food_counter = 1;
 
 	const double frames_per_second = 60.0;
@@ -247,7 +249,8 @@ int main(void) {
 			food_counter++;
 			struct coord_t* new_food = generate_food_coord(ctxt);
 			draw_food(ctxt, new_food);
-			coord_add(&food, new_food);
+			free(new_food);
+
 			clock_gettime(CLOCK_MONOTONIC, &last_food_time);
 		}
 
@@ -275,7 +278,6 @@ int main(void) {
 
 			if (collision == FOOD_COLLISION) {
 				printf("Food eaten!\n");
-				coord_remove_at(&food, new_head->x, new_head->y);
 				draw_pixel(ctxt, new_head->x, new_head->y, ZOOM, EMPTY);
 				draw_pixel(ctxt, new_head->x, new_head->y, ZOOM, SNAKE);
 				queue_enqueue(queue, new_head);
@@ -295,7 +297,6 @@ int main(void) {
 		}
 	}
 
-	coord_destroy(food);
 	queue_destroy(&queue);
 	gfx_destroy(ctxt);
 	return EXIT_SUCCESS;
