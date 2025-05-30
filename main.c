@@ -170,11 +170,17 @@ int main(void) {
 	srand(time(NULL));
 	gfx_clear(ctxt, EMPTY);
 
-	int x_min = BORDER_OFFSET;
-	int x_max = width - BORDER_OFFSET;
-	int y_min = BORDER_OFFSET;
-	int y_max = height - BORDER_OFFSET;
-	draw_border(ctxt, x_min, x_max, y_min, y_max);
+	int x_min = (BORDER_OFFSET / ZOOM) * ZOOM;
+	int x_max = (width - BORDER_OFFSET) / ZOOM * ZOOM;
+	int y_min = (BORDER_OFFSET / ZOOM) * ZOOM;
+	int y_max = (height - BORDER_OFFSET) / ZOOM * ZOOM;
+
+	int border_left = x_min + ZOOM - 1;
+	int border_right = x_max - ZOOM;
+	int border_top = y_min + ZOOM - 1;
+	int border_bottom = y_max - ZOOM;
+	draw_border(ctxt, border_left, border_right, border_top, border_bottom);
+
 
 
 	int playable_width = x_max - x_min;
