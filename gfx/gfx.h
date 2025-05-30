@@ -19,22 +19,23 @@
 #define COLOR_YELLOW 0x00FFFF00
 
 struct gfx_context_t {
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-    SDL_Texture *texture;
-    uint32_t *pixels;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_Texture* texture;
+    uint32_t* pixels;
     uint32_t width;
     uint32_t height;
 };
 
-extern void gfx_putpixel(struct gfx_context_t *ctxt, uint32_t column, uint32_t row, uint32_t color);
-extern uint32_t gfx_getpixel(struct gfx_context_t *ctxt, int x, int y);
-extern void gfx_clear(struct gfx_context_t *ctxt, uint32_t color);
-extern struct gfx_context_t *gfx_create(char *text, uint32_t width, uint32_t height);
-extern void gfx_destroy(struct gfx_context_t *ctxt);
-extern void gfx_present(struct gfx_context_t *ctxt);
+extern void gfx_putpixel(struct gfx_context_t* ctxt, uint32_t column, uint32_t row, uint32_t color);
+extern uint32_t gfx_getpixel(struct gfx_context_t* ctxt, int x, int y);
+extern void gfx_clear(struct gfx_context_t* ctxt, uint32_t color);
+extern struct gfx_context_t* gfx_create(char* text, uint32_t width, uint32_t height);
+extern void gfx_destroy(struct gfx_context_t* ctxt);
+extern void gfx_present(struct gfx_context_t* ctxt);
 extern SDL_Keycode gfx_keypressed();
 extern bool quit_signal();
 extern void wait_for_quit_signal();
-
+void draw_pixel(struct gfx_context_t* context, int x, int y, int zoom, uint32_t color);
+void draw_text(struct gfx_context_t* ctxt, const char* str, int x, int y, int zoom, uint32_t color);
 #endif

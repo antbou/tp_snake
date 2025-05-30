@@ -1,0 +1,14 @@
+#ifndef _MENU_H
+#define _MENU_H
+
+#include "../gfx/gfx.h"
+
+enum difficulty_level {
+    EASY,
+    NORMAL,
+    HARD
+};
+
+enum difficulty_level show_start_screen(struct gfx_context_t* ctxt);
+
+#endif

@@ -8,10 +8,11 @@
 #include "snake/snake.h"
 #include "queue/queue.h"
 #include "coord/coord.h"
+#include "menu/menu.h"
 
 #define MAX_FOOD_COUNT 50
 #define FOOD_SPAWN_INTERVAL 5000.0 // millisecondes
-#define SNAKE_MOVE_INTERVAL 70.0  // millisecondes
+// #define SNAKE_MOVE_INTERVAL 70.0  // millisecondes
 
 #define BORDER_OFFSET 16
 #define ZOOM 8
@@ -42,14 +43,6 @@ static void draw_border(struct gfx_context_t* context, int x0, int x1, int y0, i
 	}
 	for (int iy = y0; iy < y1; ++iy) {
 		gfx_putpixel(context, x1 - 1, iy, WALL);
-	}
-}
-
-static void draw_pixel(struct gfx_context_t* context, int x, int y, int zoom, uint32_t color) {
-	for (int ix = 0; ix < zoom; ix++) {
-		for (int iy = 0; iy < zoom; iy++) {
-			gfx_putpixel(context, x + ix, y + iy, color);
-		}
 	}
 }
 
@@ -152,6 +145,7 @@ double elapsed_ms(struct timespec* start, struct timespec* end) {
 }
 
 int main(void) {
+
 	const int width = 1920;
 	const int height = 1080;
 
@@ -165,6 +159,21 @@ int main(void) {
 	if (!ctxt) {
 		fprintf(stderr, "Graphics initialization failed!\n");
 		return EXIT_FAILURE;
+	}
+
+	enum difficulty_level difficulty = show_start_screen(ctxt);
+	double snake_move_interval = 0.0;
+
+	switch (difficulty) {
+	case EASY:
+		snake_move_interval = 120.0;
+		break;
+	case NORMAL:
+		snake_move_interval = 70.0;
+		break;
+	case HARD:
+		snake_move_interval = 40.0;
+		break;
 	}
 
 	srand(time(NULL));
@@ -263,7 +272,7 @@ int main(void) {
 		}
 
 		double time_since_last_move = elapsed_ms(&last_move_time, &current_time);
-		if (time_since_last_move >= SNAKE_MOVE_INTERVAL) {
+		if (time_since_last_move >= snake_move_interval) {
 			bool is_reverse_turn = (last_direction + direction == 3);
 			struct coord_t* new_head = new_position(direction, queue->tail, ZOOM);
 
