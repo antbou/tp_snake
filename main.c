@@ -108,26 +108,34 @@ static void move_snake(struct gfx_context_t* context, struct queue_t* queue, str
 	draw_pixel(context, tail_x, tail_y, ZOOM, EMPTY);
 }
 
-static enum collision_type check_collision(struct gfx_context_t* context, struct coord_t* pos, uint32_t target_color) {
+/**
+ * Determines the type of collision based on the pixel content
+ * at the given coordinate in the context.
+ *
+ * @param context the graphics context
+ * @param pos the position to evaluate
+ * @return the corresponding collision type (wall, snake, food, or none)
+ */
+static enum collision_type get_collision_type(struct gfx_context_t* context, struct coord_t* pos) {
 	const int zoom = ZOOM;
 	for (int ix = 0; ix < zoom; ix++) {
 		for (int iy = 0; iy < zoom; iy++) {
-			if (gfx_getpixel(context, pos->x + ix, pos->y + iy) == target_color) {
-				switch (target_color) {
-				case WALL:
-					return WALL_COLLISION;
-				case SNAKE:
-					return SNAKE_COLLISION;
-				case FOOD:
-					return FOOD_COLLISION;
-				default:
-					return NO_COLLISION;
-				}
+			uint32_t pixel = gfx_getpixel(context, pos->x + ix, pos->y + iy);
+			switch (pixel) {
+			case WALL:
+				return WALL_COLLISION;
+			case SNAKE:
+				return SNAKE_COLLISION;
+			case FOOD:
+				return FOOD_COLLISION;
+			default:
+				break;
 			}
 		}
 	}
 	return NO_COLLISION;
 }
+
 
 /**
  * Compute the time elapsed between two timespec structs in milliseconds.
@@ -248,19 +256,17 @@ int main(void) {
 			bool is_reverse_turn = (last_direction + direction == 3);
 			struct coord_t* new_head = new_position(direction, queue->tail, ZOOM);
 
-			enum collision_type collision = check_collision(ctxt, new_head, WALL);
+			enum collision_type collision = get_collision_type(ctxt, new_head);
 			if (collision == WALL_COLLISION || is_reverse_turn) {
 				printf("Wall collision or reverse turn detected\n");
 				break;
 			}
 
-			collision = check_collision(ctxt, new_head, SNAKE);
 			if (collision == SNAKE_COLLISION) {
 				printf("Snake self-collision detected\n");
 				break;
 			}
 
-			collision = check_collision(ctxt, new_head, FOOD);
 			if (collision == FOOD_COLLISION) {
 				printf("Food eaten!\n");
 				coord_remove_at(&food, new_head->x, new_head->y);
