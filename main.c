@@ -13,7 +13,6 @@
 
 #define MAX_FOOD_COUNT 50
 #define FOOD_SPAWN_INTERVAL 5000.0 // millisecondes
-// #define SNAKE_MOVE_INTERVAL 70.0  // millisecondes
 
 #define BORDER_OFFSET 16
 #define ZOOM 8
@@ -23,13 +22,6 @@ enum screen_color_state {
 	SNAKE = COLOR_WHITE,
 	FOOD = COLOR_RED,
 	WALL = COLOR_BLUE
-};
-
-enum collision_type {
-	NO_COLLISION,
-	WALL_COLLISION,
-	SNAKE_COLLISION,
-	FOOD_COLLISION
 };
 
 static void draw_border(struct gfx_context_t* context, int x0, int x1, int y0, int y1) {
@@ -45,56 +37,6 @@ static void draw_border(struct gfx_context_t* context, int x0, int x1, int y0, i
 	for (int iy = y0; iy < y1; ++iy) {
 		gfx_putpixel(context, x1 - 1, iy, WALL);
 	}
-}
-
-static void draw_snake_initial(struct gfx_context_t* context, struct queue_t* queue) {
-	struct coord_t* current = queue->head;
-	while (current != NULL) {
-		draw_pixel(context, current->x, current->y, ZOOM, SNAKE);
-		current = current->next;
-	}
-}
-
-static void move_snake(struct gfx_context_t* context, struct queue_t* queue, struct coord_t* new_pos) {
-	draw_pixel(context, new_pos->x, new_pos->y, ZOOM, SNAKE);
-	queue_enqueue(queue, new_pos);
-
-	// Get tail position before removing it
-	struct coord_t* old_tail = queue->head;
-	int tail_x = old_tail->x;
-	int tail_y = old_tail->y;
-
-	// Remove tail
-	queue_dequeue(queue);
-	draw_pixel(context, tail_x, tail_y, ZOOM, EMPTY);
-}
-
-/**
- * Determines the type of collision based on the pixel content
- * at the given coordinate in the context.
- *
- * @param context the graphics context
- * @param pos the position to evaluate
- * @return the corresponding collision type (wall, snake, food, or none)
- */
-static enum collision_type get_collision_type(struct gfx_context_t* context, struct coord_t* pos) {
-	const int zoom = ZOOM;
-	for (int ix = 0; ix < zoom; ix++) {
-		for (int iy = 0; iy < zoom; iy++) {
-			uint32_t pixel = gfx_getpixel(context, pos->x + ix, pos->y + iy);
-			switch (pixel) {
-			case WALL:
-				return WALL_COLLISION;
-			case SNAKE:
-				return SNAKE_COLLISION;
-			case FOOD:
-				return FOOD_COLLISION;
-			default:
-				break;
-			}
-		}
-	}
-	return NO_COLLISION;
 }
 
 static double difficulty_to_interval(enum difficulty_level difficulty) {
@@ -170,7 +112,6 @@ int main(void) {
 	const int width = 1920;
 	const int height = 1080;
 
-
 	if ((width - 2 * BORDER_OFFSET) % ZOOM != 0 ||
 		(height - 2 * BORDER_OFFSET) % ZOOM != 0) {
 		fprintf(stderr, "Error: screen dimensions must align with zoom (%d).\n", ZOOM);
@@ -210,7 +151,8 @@ start_game:
 	int playable_height = y_max - y_min;
 	int max_snake_size = (playable_width / ZOOM) * (playable_height / ZOOM);
 	struct queue_t* queue = init_snake(x_max, y_max, ZOOM);
-	draw_snake_initial(ctxt, queue);
+	draw_snake_initial(ctxt, queue, ZOOM, SNAKE);
+
 
 	int food_counter = 1, score = 0;
 	spawn_food(ctxt, BORDER_OFFSET, ZOOM, EMPTY, FOOD);
@@ -259,7 +201,7 @@ start_game:
 			bool is_reverse_turn = (last_direction + direction == 3);
 			struct coord_t* new_head = new_position(direction, queue->tail, ZOOM);
 
-			enum collision_type collision = get_collision_type(ctxt, new_head);
+			enum collision_type collision = get_collision_type(ctxt, new_head, ZOOM);
 			if (collision == WALL_COLLISION || is_reverse_turn) {
 				printf("Wall collision or reverse turn detected\n");
 				break;
@@ -277,7 +219,7 @@ start_game:
 				queue_enqueue(queue, new_head);
 				food_counter--;
 			} else {
-				move_snake(ctxt, queue, new_head);
+				move_snake(ctxt, queue, new_head, ZOOM, SNAKE, EMPTY);
 			}
 			clock_gettime(CLOCK_MONOTONIC, &last_move_time);
 		}

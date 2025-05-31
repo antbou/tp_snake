@@ -1,7 +1,6 @@
 #include "snake.h"
-#include "../queue/queue.h"
 #include <stdlib.h>
-
+#include "../queue/queue.h"
 
 struct queue_t* init_snake(const int width, const int height, const int zoom) {
     struct queue_t* queue = queue_create();
@@ -45,4 +44,41 @@ struct coord_t* new_position(enum direction dir, struct coord_t* element, const 
 }
 
 
-// lorsque le serpent "mange" de la nourriture sa longueur augmente de un et la nourriture disparait
+void draw_snake_initial(struct gfx_context_t* ctxt, struct queue_t* queue, int zoom, uint32_t color) {
+    struct coord_t* current = queue->head;
+    while (current != NULL) {
+        draw_pixel(ctxt, current->x, current->y, zoom, color);
+        current = current->next;
+    }
+}
+
+void move_snake(struct gfx_context_t* ctxt, struct queue_t* queue, struct coord_t* new_pos, int zoom, uint32_t color_snake, uint32_t color_empty) {
+    draw_pixel(ctxt, new_pos->x, new_pos->y, zoom, color_snake);
+    queue_enqueue(queue, new_pos);
+
+    struct coord_t* old_tail = queue->head;
+    int tail_x = old_tail->x;
+    int tail_y = old_tail->y;
+
+    queue_dequeue(queue);
+    draw_pixel(ctxt, tail_x, tail_y, zoom, color_empty);
+}
+
+enum collision_type get_collision_type(struct gfx_context_t* ctxt, struct coord_t* pos, int zoom) {
+    for (int ix = 0; ix < zoom; ix++) {
+        for (int iy = 0; iy < zoom; iy++) {
+            uint32_t pixel = gfx_getpixel(ctxt, pos->x + ix, pos->y + iy);
+            switch (pixel) {
+            case COLOR_BLUE:
+                return WALL_COLLISION;
+            case COLOR_WHITE:
+                return SNAKE_COLLISION;
+            case COLOR_RED:
+                return FOOD_COLLISION;
+            default:
+                break;
+            }
+        }
+    }
+    return NO_COLLISION;
+}
