@@ -148,7 +148,7 @@ int main(void) {
 
 	const int width = 1920;
 	const int height = 1080;
-	bool done = false;
+
 
 	if ((width - 2 * BORDER_OFFSET) % ZOOM != 0 ||
 		(height - 2 * BORDER_OFFSET) % ZOOM != 0) {
@@ -161,18 +161,21 @@ int main(void) {
 		fprintf(stderr, "Graphics initialization failed!\n");
 		return EXIT_FAILURE;
 	}
+
+start_game:
+	bool done = false;
 	enum difficulty_level difficulty = show_start_screen(ctxt);
 	double snake_move_interval = 0.0;
 
 	switch (difficulty) {
 	case EASY:
-		snake_move_interval = 120.0;
+		snake_move_interval = 110.0;
 		break;
 	case NORMAL:
-		snake_move_interval = 70.0;
+		snake_move_interval = 60.0;
 		break;
 	case HARD:
-		snake_move_interval = 40.0;
+		snake_move_interval = 20.0;
 		break;
 	case LEAVE:
 		done = true;
@@ -208,6 +211,7 @@ int main(void) {
 	free(new_food);
 
 	int food_counter = 1;
+	int score = 0;
 
 	const double frames_per_second = 60.0;
 	const double time_between_frames = 1.0 / frames_per_second * 1e6;
@@ -260,7 +264,7 @@ int main(void) {
 			struct coord_t* new_food = generate_food_coord(ctxt);
 			draw_food(ctxt, new_food);
 			free(new_food);
-
+			score += 10;
 			clock_gettime(CLOCK_MONOTONIC, &last_food_time);
 		}
 
@@ -306,8 +310,11 @@ int main(void) {
 			usleep((int32_t)sleep_time_for_fps_limit);
 		}
 	}
-
+	gfx_clear(ctxt, EMPTY);
 	queue_destroy(&queue);
+	if (show_end_screen(ctxt, score)) {
+		goto start_game;
+	}
 	gfx_destroy(ctxt);
 	return EXIT_SUCCESS;
 }

@@ -11,5 +11,6 @@ enum difficulty_level {
 };
 
 enum difficulty_level show_start_screen(struct gfx_context_t* ctxt);
+bool show_end_screen(struct gfx_context_t* ctxt, int const score);
 
 #endif

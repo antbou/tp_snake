@@ -44,3 +44,46 @@ enum difficulty_level show_start_screen(struct gfx_context_t* ctxt) {
 
     return selection;
 }
+
+
+bool show_end_screen(struct gfx_context_t* ctxt, int const score) {
+    bool choosing = true;
+    bool play_again = false;
+    SDL_Color white = { 255, 255, 255, 255 };
+    SDL_Color red = { 255, 0, 0, 255 };
+    SDL_Color blue = { 0, 0, 255, 255 };
+    gfx_clear(ctxt, COLOR_BLACK);
+    while (choosing) {
+        gfx_clear(ctxt, COLOR_BLACK);
+        char score_text[200];
+        snprintf(score_text, sizeof(score_text), "Your score is %d", score);
+        draw_text_ttf(ctxt, "GAME OVER", 860, 100, 48, white, "assets/PixelOperatorMono8.ttf");
+        draw_text_ttf(ctxt, score_text, 860, 250, 32, white, "assets/PixelOperatorMono8.ttf");
+        draw_text_ttf(ctxt, "PLAY AGAIN", 860, 310, 32, play_again == true ? red : white, "assets/PixelOperatorMono8.ttf");
+        draw_text_ttf(ctxt, "LEAVE", 860, 370, 32, play_again == false ? red : white, "assets/PixelOperatorMono8.ttf");
+
+        SDL_RenderPresent(ctxt->renderer);
+
+        SDL_Keycode key = gfx_keypressed();
+        switch (key) {
+        case SDLK_UP:
+            play_again = true;
+            break;
+        case SDLK_DOWN:
+            play_again = false;
+            break;
+        case SDLK_RETURN:
+        case SDLK_SPACE:
+            choosing = false;
+            break;
+        }
+
+        if (quit_signal()) {
+            return false;
+        }
+
+        usleep(120000); // Add a short delay to prevent the menu from scrolling too fast when holding a key
+    }
+
+    return play_again;
+}
