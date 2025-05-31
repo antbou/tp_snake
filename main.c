@@ -59,6 +59,20 @@ static double difficulty_to_interval(enum difficulty_level difficulty) {
 	}
 }
 
+static struct gfx_context_t* setup_context(const int width, const int height) {
+	if ((width - 2 * BORDER_OFFSET) % ZOOM != 0 ||
+		(height - 2 * BORDER_OFFSET) % ZOOM != 0) {
+		fprintf(stderr, "Error: screen dimensions must align with zoom (%d).\n", ZOOM);
+		return NULL;
+	}
+
+	struct gfx_context_t* ctxt = gfx_create("Snake - TP", width, height);
+	if (!ctxt) {
+		fprintf(stderr, "Graphics initialization failed!\n");
+	}
+	return ctxt;
+}
+
 enum direction get_next_direction(enum direction current_direction) {
 	SDL_Keycode key = gfx_keypressed();
 
@@ -112,15 +126,8 @@ int main(void) {
 	const int width = 1920;
 	const int height = 1080;
 
-	if ((width - 2 * BORDER_OFFSET) % ZOOM != 0 ||
-		(height - 2 * BORDER_OFFSET) % ZOOM != 0) {
-		fprintf(stderr, "Error: screen dimensions must align with zoom (%d).\n", ZOOM);
-		return EXIT_FAILURE;
-	}
-
-	struct gfx_context_t* ctxt = gfx_create("Snake - TP", width, height);
+	struct gfx_context_t* ctxt = setup_context(width, height);
 	if (!ctxt) {
-		fprintf(stderr, "Graphics initialization failed!\n");
 		return EXIT_FAILURE;
 	}
 
