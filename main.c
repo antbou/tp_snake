@@ -149,6 +149,39 @@ static double difficulty_to_interval(enum difficulty_level difficulty) {
 	}
 }
 
+enum direction get_next_direction(enum direction current_direction) {
+	SDL_Keycode key = gfx_keypressed();
+
+	enum direction requested = current_direction;
+
+	switch (key) {
+	case SDLK_UP:
+	case SDLK_w: {
+		requested = up;
+		break;
+	}
+	case SDLK_DOWN:
+	case SDLK_s: {
+		requested = down;
+		break;
+	}
+	case SDLK_LEFT:
+	case SDLK_a: {
+		requested = left;
+		break;
+	}
+	case SDLK_RIGHT:
+	case SDLK_d: {
+		requested = right;
+		break;
+	}
+	default: {
+		return current_direction;
+	}
+	}
+
+	return requested;
+}
 
 /**
  * Compute the time elapsed between two timespec structs in milliseconds.
@@ -224,37 +257,16 @@ start_game:
 	const double frames_per_second = 60.0;
 	const double time_between_frames = 1.0 / frames_per_second * 1e6;
 
-	struct timespec last_food_time;
+	struct timespec last_food_time, last_move_time;
 	clock_gettime(CLOCK_MONOTONIC, &last_food_time);
 
-	static struct timespec last_move_time;
 	static bool first_move = true;
 	while (!done) {
 		struct timespec frame_start_time, frame_end_time, current_time;
 		clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
 
 		last_direction = direction;
-
-		switch (gfx_keypressed()) {
-		case SDLK_UP:
-			direction = up;
-			printf("Up pressed\n");
-			break;
-		case SDLK_DOWN:
-			direction = down;
-			printf("Down pressed\n");
-			break;
-		case SDLK_LEFT:
-			direction = left;
-			printf("Left pressed\n");
-			break;
-		case SDLK_RIGHT:
-			direction = right;
-			printf("Right pressed\n");
-			break;
-		default:
-			break;
-		}
+		direction = get_next_direction(direction);
 
 		// leak from gfx_present
 		gfx_present(ctxt);
