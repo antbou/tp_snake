@@ -35,4 +35,4 @@ run: main
 	./main
 
 clean:
-	rm -f main *.o gfx/*.o queue/*.o
+	rm -f main *.o
