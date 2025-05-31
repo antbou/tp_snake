@@ -159,8 +159,6 @@ start_game:
 	int max_snake_size = (playable_width / ZOOM) * (playable_height / ZOOM);
 	struct queue_t* queue = init_snake(x_max, y_max, ZOOM);
 	draw_snake_initial(ctxt, queue, ZOOM, SNAKE);
-
-
 	int food_counter = 1, score = 0;
 	spawn_food(ctxt, BORDER_OFFSET, ZOOM, EMPTY, FOOD);
 
@@ -179,47 +177,61 @@ start_game:
 		last_direction = direction;
 		direction = get_next_direction(direction);
 
-		// leak from gfx_present
+		// Memory leaks occur in gfx_present
 		gfx_present(ctxt);
 		done = quit_signal();
-		bool has_snake_won = queue->size >= max_snake_size;
 
+
+		bool has_snake_won = queue->size >= max_snake_size;
 		if (has_snake_won) {
 			printf("You win\n");
 			break;
 		}
+
 		clock_gettime(CLOCK_MONOTONIC, &current_time);
+
+		// Check if it's time to spawn food
 		double time_since_last_food = elapsed_ms(&last_food_time, &current_time);
-		if ((time_since_last_food >= FOOD_SPAWN_INTERVAL && food_counter < MAX_FOOD_COUNT) || food_counter == 0) {
+		bool should_spawn_food = (
+			(time_since_last_food >= FOOD_SPAWN_INTERVAL && food_counter < MAX_FOOD_COUNT)
+			|| food_counter == 0
+			);
+		if (should_spawn_food) {
 			food_counter++;
 			spawn_food(ctxt, BORDER_OFFSET, ZOOM, EMPTY, FOOD);
-			score += 10;
 			clock_gettime(CLOCK_MONOTONIC, &last_food_time);
 		}
 
+		// Handles the first move to initialize the timer
 		if (first_move) {
 			clock_gettime(CLOCK_MONOTONIC, &last_move_time);
 			first_move = false;
 			continue;
 		}
 
+		// Handles the snake movement
 		double time_since_last_move = elapsed_ms(&last_move_time, &current_time);
-		if (time_since_last_move >= snake_move_interval) {
-			bool is_reverse_turn = (last_direction + direction == 3);
+		bool should_move_snake = (time_since_last_move >= snake_move_interval);
+		if (should_move_snake) {
 			struct coord_t* new_head = new_position(direction, queue->tail, ZOOM);
-
+			bool is_reverse_turn = (last_direction + direction == 3);
 			enum collision_type collision = get_collision_type(ctxt, new_head, ZOOM);
-			if (collision == WALL_COLLISION || is_reverse_turn) {
+
+			bool hit_wall_or_reverse = (collision == WALL_COLLISION || is_reverse_turn);
+			bool hit_self = (collision == SNAKE_COLLISION);
+			bool ate_food = (collision == FOOD_COLLISION);
+			if (hit_wall_or_reverse) {
 				printf("Wall collision or reverse turn detected\n");
 				break;
 			}
 
-			if (collision == SNAKE_COLLISION) {
+			if (hit_self) {
 				printf("Snake self-collision detected\n");
 				break;
 			}
 
-			if (collision == FOOD_COLLISION) {
+			if (ate_food) {
+				score += 10;
 				printf("Food eaten!\n");
 				draw_pixel(ctxt, new_head->x, new_head->y, ZOOM, EMPTY);
 				draw_pixel(ctxt, new_head->x, new_head->y, ZOOM, SNAKE);
@@ -231,6 +243,7 @@ start_game:
 			clock_gettime(CLOCK_MONOTONIC, &last_move_time);
 		}
 
+		// Handles the FPS limit
 		clock_gettime(CLOCK_MONOTONIC, &frame_end_time);
 		double frame_duration_ms = elapsed_ms(&frame_start_time, &frame_end_time);
 		double sleep_time_for_fps_limit = time_between_frames - frame_duration_ms;
