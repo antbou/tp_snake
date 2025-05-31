@@ -1,6 +1,8 @@
 #ifndef _MENU_H
 #define _MENU_H
 
+#define FONT_PATH "assets/PixelOperatorMono8.ttf"
+
 #include "../gfx/gfx.h"
 
 enum difficulty_level {
