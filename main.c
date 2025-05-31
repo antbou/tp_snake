@@ -129,6 +129,26 @@ static enum collision_type get_collision_type(struct gfx_context_t* context, str
 	return NO_COLLISION;
 }
 
+static double difficulty_to_interval(enum difficulty_level difficulty) {
+	switch (difficulty) {
+	case EASY: {
+		return 100.0;
+	}
+	case NORMAL: {
+		return 60.0;
+	}
+	case HARD: {
+		return 30.0;
+	}
+	case LEAVE: {
+		return 0.0;
+	}
+	default: {
+		return 60.0;
+	}
+	}
+}
+
 
 /**
  * Compute the time elapsed between two timespec structs in milliseconds.
@@ -165,21 +185,9 @@ int main(void) {
 start_game:
 	bool done = false;
 	enum difficulty_level difficulty = show_start_screen(ctxt);
-	double snake_move_interval = 0.0;
-
-	switch (difficulty) {
-	case EASY:
-		snake_move_interval = 110.0;
-		break;
-	case NORMAL:
-		snake_move_interval = 60.0;
-		break;
-	case HARD:
-		snake_move_interval = 20.0;
-		break;
-	case LEAVE:
+	double snake_move_interval = snake_move_interval = difficulty_to_interval(difficulty);
+	if (difficulty == LEAVE) {
 		done = true;
-		break;
 	}
 
 	srand(time(NULL));
