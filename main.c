@@ -253,7 +253,7 @@ start_game:
 		}
 	}
 	queue_destroy(&queue);
-	if (show_end_screen(ctxt, score)) {
+	if (!done && show_end_screen(ctxt, score)) {
 		goto start_game;
 	}
 	gfx_destroy(ctxt);
