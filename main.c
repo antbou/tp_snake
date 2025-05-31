@@ -55,10 +55,6 @@ static void draw_snake_initial(struct gfx_context_t* context, struct queue_t* qu
 	}
 }
 
-static void draw_food(struct gfx_context_t* context, struct coord_t* food) {
-	draw_pixel(context, food->x, food->y, ZOOM, FOOD);
-}
-
 static void move_snake(struct gfx_context_t* context, struct queue_t* queue, struct coord_t* new_pos) {
 	draw_pixel(context, new_pos->x, new_pos->y, ZOOM, SNAKE);
 	queue_enqueue(queue, new_pos);
@@ -213,26 +209,20 @@ start_game:
 	int playable_width = x_max - x_min;
 	int playable_height = y_max - y_min;
 	int max_snake_size = (playable_width / ZOOM) * (playable_height / ZOOM);
-
-	int last_direction, direction = right;
 	struct queue_t* queue = init_snake(x_max, y_max, ZOOM);
-	// Draw initial snake
 	draw_snake_initial(ctxt, queue);
 
-	struct coord_t* new_food = generate_food(ctxt, BORDER_OFFSET, ZOOM, EMPTY);
-	draw_food(ctxt, new_food);
-	free(new_food);
-
-	int food_counter = 1;
-	int score = 0;
+	int food_counter = 1, score = 0;
+	spawn_food(ctxt, BORDER_OFFSET, ZOOM, EMPTY, FOOD);
 
 	const double frames_per_second = 60.0;
 	const double time_between_frames = 1.0 / frames_per_second * 1e6;
 
+	int last_direction, direction = right;
 	struct timespec last_food_time, last_move_time;
 	clock_gettime(CLOCK_MONOTONIC, &last_food_time);
 
-	static bool first_move = true;
+	bool first_move = true;
 	while (!done) {
 		struct timespec frame_start_time, frame_end_time, current_time;
 		clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
@@ -253,9 +243,7 @@ start_game:
 		double time_since_last_food = elapsed_ms(&last_food_time, &current_time);
 		if ((time_since_last_food >= FOOD_SPAWN_INTERVAL && food_counter < MAX_FOOD_COUNT) || food_counter == 0) {
 			food_counter++;
-			struct coord_t* new_food = generate_food(ctxt, BORDER_OFFSET, ZOOM, EMPTY);
-			draw_food(ctxt, new_food);
-			free(new_food);
+			spawn_food(ctxt, BORDER_OFFSET, ZOOM, EMPTY, FOOD);
 			score += 10;
 			clock_gettime(CLOCK_MONOTONIC, &last_food_time);
 		}
@@ -302,7 +290,6 @@ start_game:
 			usleep((int32_t)sleep_time_for_fps_limit);
 		}
 	}
-	gfx_clear(ctxt, EMPTY);
 	queue_destroy(&queue);
 	if (show_end_screen(ctxt, score)) {
 		goto start_game;

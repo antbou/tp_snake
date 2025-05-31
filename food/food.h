@@ -4,6 +4,6 @@
 #include "../gfx/gfx.h"
 #include "../coord/coord.h"
 
-struct coord_t* generate_food(struct gfx_context_t* context, int border_offset, int zoom, uint32_t empty_color);
+void spawn_food(struct gfx_context_t* ctxt, int border_offset, int zoom, uint32_t empty_color, uint32_t food_color);
 
 #endif
