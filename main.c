@@ -9,6 +9,7 @@
 #include "queue/queue.h"
 #include "coord/coord.h"
 #include "menu/menu.h"
+#include "food/food.h"
 
 #define MAX_FOOD_COUNT 50
 #define FOOD_SPAWN_INTERVAL 5000.0 // millisecondes
@@ -56,35 +57,6 @@ static void draw_snake_initial(struct gfx_context_t* context, struct queue_t* qu
 
 static void draw_food(struct gfx_context_t* context, struct coord_t* food) {
 	draw_pixel(context, food->x, food->y, ZOOM, FOOD);
-}
-
-
-struct coord_t* generate_food_coord(struct gfx_context_t* context) {
-	// Align the minimum coordinates to the ZOOM grid
-	const int x_min = ((BORDER_OFFSET + ZOOM - 1) / ZOOM) * ZOOM;
-	const int y_min = ((BORDER_OFFSET + ZOOM - 1) / ZOOM) * ZOOM;
-	const int x_max = context->width - BORDER_OFFSET;
-	const int y_max = context->height - BORDER_OFFSET;
-
-	int x_range = (x_max - x_min) / ZOOM;
-	int y_range = (y_max - y_min) / ZOOM;
-
-	if (x_range <= 0 || y_range <= 0) {
-		fprintf(stderr, "Error: playable area too small to place food.\n");
-		return NULL;
-	}
-
-	struct coord_t* food = coord_init(x_min, y_min);
-	if (!food) {
-		return NULL;
-	}
-
-	do {
-		food->x = (rand() % x_range) * ZOOM + x_min;
-		food->y = (rand() % y_range) * ZOOM + y_min;
-	} while (gfx_getpixel(context, food->x, food->y) != EMPTY);
-
-	return food;
 }
 
 static void move_snake(struct gfx_context_t* context, struct queue_t* queue, struct coord_t* new_pos) {
@@ -247,7 +219,7 @@ start_game:
 	// Draw initial snake
 	draw_snake_initial(ctxt, queue);
 
-	struct coord_t* new_food = generate_food_coord(ctxt);
+	struct coord_t* new_food = generate_food(ctxt, BORDER_OFFSET, ZOOM, EMPTY);
 	draw_food(ctxt, new_food);
 	free(new_food);
 
@@ -281,7 +253,7 @@ start_game:
 		double time_since_last_food = elapsed_ms(&last_food_time, &current_time);
 		if ((time_since_last_food >= FOOD_SPAWN_INTERVAL && food_counter < MAX_FOOD_COUNT) || food_counter == 0) {
 			food_counter++;
-			struct coord_t* new_food = generate_food_coord(ctxt);
+			struct coord_t* new_food = generate_food(ctxt, BORDER_OFFSET, ZOOM, EMPTY);
 			draw_food(ctxt, new_food);
 			free(new_food);
 			score += 10;
