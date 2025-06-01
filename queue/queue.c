@@ -1,12 +1,7 @@
 #include "queue.h"
 
-#include "../coord/coord.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdbool.h>
-
-struct coord_t;
-struct queue_t;
 
 struct queue_t* queue_create() {
     struct queue_t* queue = malloc(sizeof(struct queue_t));
@@ -25,16 +20,13 @@ bool queue_destroy(struct queue_t** queue) {
         return false;
     }
 
-    struct coord_t* current = (*queue)->head;
-    while (current) {
-        struct coord_t* temp = current;
-        current = current->next;
-        free(temp);
-    }
+    bool success = coord_list_destroy(&(*queue)->head);
 
+    (*queue)->tail = NULL;
     free(*queue);
     *queue = NULL;
-    return true;
+
+    return success;
 }
 
 bool queue_isEmpty(struct queue_t* queue) {

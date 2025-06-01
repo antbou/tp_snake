@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#include "../coord/coord.h"
+
 struct queue_t {
     struct coord_t* head;
     struct coord_t* tail;
