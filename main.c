@@ -24,6 +24,12 @@ enum screen_color_state {
 	WALL = COLOR_BLUE
 };
 
+/**
+ * Convert the selected difficulty level to the corresponding snake movement interval (in ms).
+ *
+ * @param difficulty The selected difficulty level (EASY, NORMAL, HARD, LEAVE).
+ * @return The interval between snake moves in milliseconds. Returns 0.0 if difficulty is LEAVE.
+ */
 static double difficulty_to_interval(enum difficulty_level difficulty) {
 	switch (difficulty) {
 	case EASY: {
@@ -44,6 +50,13 @@ static double difficulty_to_interval(enum difficulty_level difficulty) {
 	}
 }
 
+/**
+ * Initialize the graphics context and validate screen dimensions against the grid size (ZOOM).
+ *
+ * @param width The width of the screen in pixels.
+ * @param height The height of the screen in pixels.
+ * @return Pointer to a valid gfx_context_t on success, or NULL if initialization fails or dimensions are invalid.
+ */
 static struct gfx_context_t* setup_context(const int width, const int height) {
 	if ((width - 2 * BORDER_OFFSET) % ZOOM != 0 ||
 		(height - 2 * BORDER_OFFSET) % ZOOM != 0) {
@@ -58,6 +71,12 @@ static struct gfx_context_t* setup_context(const int width, const int height) {
 	return ctxt;
 }
 
+/**
+ * Get the next movement direction based on keyboard input, avoiding invalid turns.
+ *
+ * @param current_direction The current direction of the snake.
+ * @return The new direction based on user input (WASD or arrow keys), or the current one if no input is detected.
+ */
 enum direction get_next_direction(enum direction current_direction) {
 	SDL_Keycode key = gfx_keypressed();
 
