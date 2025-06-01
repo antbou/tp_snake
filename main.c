@@ -167,7 +167,7 @@ int main(void) {
 		struct timespec last_food_time, last_move_time;
 		clock_gettime(CLOCK_MONOTONIC, &last_food_time);
 
-		bool first_move = true, done = false;
+		bool first_move = true, done = false, has_snake_won = false;
 		while (!done) {
 			struct timespec frame_start_time, frame_end_time, current_time;
 			clock_gettime(CLOCK_MONOTONIC, &frame_start_time);
@@ -180,7 +180,7 @@ int main(void) {
 			done = quit_signal();
 
 
-			bool has_snake_won = queue->size >= max_snake_size;
+			has_snake_won = queue->size >= max_snake_size;
 			if (has_snake_won) {
 				printf("You win\n");
 				break;
@@ -254,7 +254,7 @@ int main(void) {
 		}
 
 		queue_destroy(&queue);
-		bool play_again = show_end_screen(ctxt, score);
+		bool play_again = show_end_screen(ctxt, score, has_snake_won);
 		if (!play_again) {
 			exit_game = true;
 		}

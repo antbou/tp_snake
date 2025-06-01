@@ -53,8 +53,6 @@ static bool handle_selection_input(int* selection, int min, int max, bool* confi
     return false;
 }
 
-/// Display the start menu and return the selected difficulty level.
-/// Handles arrow keys and enter, returns LEAVE if user wants to quit.
 enum difficulty_level show_start_screen(struct gfx_context_t* ctxt) {
     SDL_RenderClear(ctxt->renderer);
     int selection = NORMAL;
@@ -87,9 +85,7 @@ enum difficulty_level show_start_screen(struct gfx_context_t* ctxt) {
     return (enum difficulty_level)selection;
 }
 
-/// Show the end screen with score and options to play again or quit.
-/// Returns true if the player wants to replay.
-bool show_end_screen(struct gfx_context_t* ctxt, int score) {
+bool show_end_screen(struct gfx_context_t* ctxt, int score, bool does_player_win) {
     int selection = 0;  // 0 = play again, 1 = leave
     bool choosing = true;
     SDL_Color white = { 255, 255, 255, 255 };
@@ -97,10 +93,12 @@ bool show_end_screen(struct gfx_context_t* ctxt, int score) {
     while (choosing) {
         gfx_clear(ctxt, COLOR_BLACK);
 
-        char score_text[128];
+        const char* result_text = does_player_win ? "YOU WIN" : "GAME OVER";
+
+        char score_text[32]; // 15 + 11 + 1 = max 27
         snprintf(score_text, sizeof(score_text), "Your score is %d", score);
 
-        draw_label(ctxt, "GAME OVER", 100, 48, white);
+        draw_label(ctxt, result_text, 100, 48, white);
         draw_label(ctxt, score_text, 250, 32, white);
         draw_menu_item(ctxt, "PLAY AGAIN", 310, selection == 0);
         draw_menu_item(ctxt, "LEAVE", 370, selection == 1);
