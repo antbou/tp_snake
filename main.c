@@ -24,21 +24,6 @@ enum screen_color_state {
 	WALL = COLOR_BLUE
 };
 
-static void draw_border(struct gfx_context_t* context, int x0, int x1, int y0, int y1) {
-	for (int ix = x0; ix < x1; ++ix) {
-		gfx_putpixel(context, ix, y0, WALL);
-	}
-	for (int ix = x0; ix < x1; ++ix) {
-		gfx_putpixel(context, ix, y1 - 1, WALL);
-	}
-	for (int iy = y0; iy < y1; ++iy) {
-		gfx_putpixel(context, x0, iy, WALL);
-	}
-	for (int iy = y0; iy < y1; ++iy) {
-		gfx_putpixel(context, x1 - 1, iy, WALL);
-	}
-}
-
 static double difficulty_to_interval(enum difficulty_level difficulty) {
 	switch (difficulty) {
 	case EASY: {
@@ -163,7 +148,7 @@ int main(void) {
 		int border_right = x_max + ZOOM + 1;
 		int border_top = y_min - 1;
 		int border_bottom = y_max + ZOOM + 1;
-		draw_border(ctxt, border_left, border_right, border_top, border_bottom);
+		draw_border(ctxt, border_left, border_right, border_top, border_bottom, WALL);
 
 		int playable_width = x_max - x_min;
 		int playable_height = y_max - y_min;

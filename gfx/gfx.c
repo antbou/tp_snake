@@ -193,3 +193,18 @@ void draw_text_ttf(struct gfx_context_t* ctxt, const char* text, int x, int y, i
 	SDL_DestroyTexture(texture);
 	TTF_CloseFont(font);
 }
+
+void draw_border(struct gfx_context_t* context, int x0, int x1, int y0, int y1, uint32_t wall) {
+	for (int ix = x0; ix < x1; ++ix) {
+		gfx_putpixel(context, ix, y0, wall);
+	}
+	for (int ix = x0; ix < x1; ++ix) {
+		gfx_putpixel(context, ix, y1 - 1, wall);
+	}
+	for (int iy = y0; iy < y1; ++iy) {
+		gfx_putpixel(context, x0, iy, wall);
+	}
+	for (int iy = y0; iy < y1; ++iy) {
+		gfx_putpixel(context, x1 - 1, iy, wall);
+	}
+}

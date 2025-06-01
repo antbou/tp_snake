@@ -38,4 +38,5 @@ extern bool quit_signal();
 extern void wait_for_quit_signal();
 void draw_pixel(struct gfx_context_t* context, int x, int y, int zoom, uint32_t color);
 void draw_text_ttf(struct gfx_context_t* ctxt, const char* text, int x, int y, int size, SDL_Color color, const char* font_path);
+void draw_border(struct gfx_context_t* context, int x0, int x1, int y0, int y1, uint32_t color);
 #endif
