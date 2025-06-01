@@ -10,6 +10,7 @@
 - [Fonctionnalités](#fonctionnalités)
 - [Fonctionnalités personnalisées](#fonctionnalités-personnalisées)
 - [Bugs rencontrés](#bugs-rencontrés)
+- [Points à améliorer](#points-à-améliorer)
 - [Licence](#licence)
 
 ---
@@ -117,6 +118,15 @@ Les paramètres sont **optionnels**. Si non spécifiés ou invalides, des valeur
 ## Bugs rencontrés
 
 Une liste des bugs rencontrés et résolus se trouve dans le fichier [docs/bug](docs/bug).
+
+## Points à améliorer
+
+- **Meilleure réactivité lors de la fermeture du jeu** (ex. : touche ESC ou Alt+F4).
+- **Meilleure réactivité des mouvements du serpent (flèches et AWSD)**, en particulier à vitesse élevée.
+- **Score persistant** entre les parties.
+- **Personnalisation des couleurs**, notamment pour le serpent et les fruits.
+
+---
 
 ## Licence
 
