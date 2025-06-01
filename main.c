@@ -295,6 +295,10 @@ int main(int argc, char const* argv[]) {
 		}
 
 		queue_destroy(&queue);
+		if (done) {
+			break;
+		}
+
 		bool play_again = show_end_screen(ctxt, score, has_snake_won);
 		if (!play_again) {
 			exit_game = true;
