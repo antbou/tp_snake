@@ -1,9 +1,11 @@
 #ifndef _MENU_H
 #define _MENU_H
 
-#define FONT_PATH "assets/PixelOperatorMono8.ttf"
-
 #include "../gfx/gfx.h"
+
+#include <stdbool.h>
+
+#define FONT_PATH "assets/PixelOperatorMono8.ttf"
 
 enum difficulty_level {
     EASY,
@@ -12,6 +14,16 @@ enum difficulty_level {
     LEAVE,
 };
 
+/**
+ * Display the start screen where the player can select a difficulty level.
+ *
+ * This menu allows navigation using the arrow keys (or W/S) and selection via
+ * ENTER or SPACE. The options are highlighted dynamically. If the user closes
+ * the window, the function returns LEAVE to signal an exit request.
+ *
+ * @param ctxt Pointer to the graphics context used for rendering.
+ * @return The selected difficulty level (EASY, NORMAL, HARD), or LEAVE if the player quits.
+ */
 enum difficulty_level show_start_screen(struct gfx_context_t* ctxt);
 
 /**
