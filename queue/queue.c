@@ -11,7 +11,7 @@ struct queue_t* queue_create() {
     }
     queue->head = NULL;
     queue->tail = NULL;
-    queue->tail = 0;
+    queue->size = 0;
     return queue;
 }
 
