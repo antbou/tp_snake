@@ -134,8 +134,8 @@ double elapsed_ms(struct timespec* start, struct timespec* end) {
 
 
 int main(int argc, char const* argv[]) {
-	const int width = 1920;
-	const int height = 1080;
+	const int width = 1280;
+	const int height = 800;
 
 	double food_spawn_interval = FOOD_SPAWN_INTERVAL;
 	int max_food_count = MAX_FOOD_COUNT;
