@@ -8,8 +8,8 @@ LDFLAGS = -fsanitize=address -fsanitize=leak -fsanitize=undefined
 main: main.o gfx.o snake.o queue.o coord.o menu.o food.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
-main.o: main.c gfx/gfx.c
-	$(CC) $(CFLAGS) $< -c
+main.o: main.c
+	$(CC) $(CFLAGS) -c $<
 
 gfx.o: gfx/gfx.c gfx/gfx.h
 	$(CC) $(CFLAGS) $< -c
