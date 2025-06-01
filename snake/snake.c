@@ -1,6 +1,6 @@
 #include "snake.h"
+
 #include <stdlib.h>
-#include "../queue/queue.h"
 
 struct queue_t* init_snake(const int width, const int height, const int zoom) {
     struct queue_t* queue = queue_create();
@@ -22,7 +22,7 @@ struct queue_t* init_snake(const int width, const int height, const int zoom) {
     return queue;
 }
 
-struct coord_t* new_position(enum direction dir, struct coord_t* element, const int zoom) {
+struct coord_t* new_position(enum direction dir, const struct coord_t* element, const int zoom) {
     int new_x = element->x;
     int new_y = element->y;
     switch (dir) {
@@ -44,7 +44,7 @@ struct coord_t* new_position(enum direction dir, struct coord_t* element, const 
 }
 
 
-void draw_snake_initial(struct gfx_context_t* ctxt, struct queue_t* queue, int zoom, uint32_t color) {
+void draw_snake_initial(struct gfx_context_t* ctxt, const struct queue_t* queue, int zoom, uint32_t color) {
     struct coord_t* current = queue->head;
     while (current != NULL) {
         draw_pixel(ctxt, current->x, current->y, zoom, color);
@@ -64,7 +64,7 @@ void move_snake(struct gfx_context_t* ctxt, struct queue_t* queue, struct coord_
     draw_pixel(ctxt, tail_x, tail_y, zoom, color_empty);
 }
 
-enum collision_type get_collision_type(struct gfx_context_t* ctxt, struct coord_t* pos, int zoom) {
+enum collision_type get_collision_type(struct gfx_context_t* ctxt, const struct coord_t* pos, int zoom) {
     for (int ix = 0; ix < zoom; ix++) {
         for (int iy = 0; iy < zoom; iy++) {
             uint32_t pixel = gfx_getpixel(ctxt, pos->x + ix, pos->y + iy);
