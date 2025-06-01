@@ -57,7 +57,6 @@ static bool handle_selection_input(int* selection, int min, int max, bool* confi
 /// Handles arrow keys and enter, returns LEAVE if user wants to quit.
 enum difficulty_level show_start_screen(struct gfx_context_t* ctxt) {
     SDL_RenderClear(ctxt->renderer);
-    gfx_clear(ctxt, COLOR_BLACK);
     int selection = NORMAL;
     bool choosing = true;
     SDL_Color white = { 255, 255, 255, 255 };
@@ -65,7 +64,6 @@ enum difficulty_level show_start_screen(struct gfx_context_t* ctxt) {
 
     while (choosing) {
         gfx_clear(ctxt, COLOR_BLACK);
-
         draw_label(ctxt, "SNAKE", 100, 48, white);
         draw_menu_item(ctxt, "EASY", 250, selection == EASY);
         draw_menu_item(ctxt, "NORMAL", 310, selection == NORMAL);
@@ -73,7 +71,6 @@ enum difficulty_level show_start_screen(struct gfx_context_t* ctxt) {
         draw_label(ctxt, "PRESS ENTER", 450, 24, blue);
 
         SDL_RenderPresent(ctxt->renderer);
-
         bool confirmed = false;
         if (handle_selection_input(&selection, EASY, HARD, &confirmed)) {
             return LEAVE;
@@ -93,8 +90,6 @@ enum difficulty_level show_start_screen(struct gfx_context_t* ctxt) {
 /// Show the end screen with score and options to play again or quit.
 /// Returns true if the player wants to replay.
 bool show_end_screen(struct gfx_context_t* ctxt, int score) {
-    SDL_RenderClear(ctxt->renderer);
-    gfx_clear(ctxt, COLOR_BLACK);
     int selection = 0;  // 0 = play again, 1 = leave
     bool choosing = true;
     SDL_Color white = { 255, 255, 255, 255 };
@@ -116,7 +111,6 @@ bool show_end_screen(struct gfx_context_t* ctxt, int score) {
         if (handle_selection_input(&selection, 0, 1, &confirmed)) {
             return false;
         }
-
         if (confirmed) {
             choosing = false;
         }

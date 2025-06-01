@@ -80,6 +80,7 @@ void gfx_clear(struct gfx_context_t* ctxt, uint32_t color) {
 	int n = ctxt->width * ctxt->height;
 	while (n)
 		ctxt->pixels[--n] = color;
+	SDL_RenderClear(ctxt->renderer);
 }
 
 /// Display the graphic context.
