@@ -67,10 +67,3 @@ bool queue_dequeue(struct queue_t* queue) {
     free(temp);
     return true;
 }
-
-struct coord_t* queue_peek(struct queue_t* queue) {
-    if (!queue || !queue->head) {
-        return NULL;
-    }
-    return queue->head;
-}

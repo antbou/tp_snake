@@ -48,11 +48,4 @@ bool queue_enqueue(struct queue_t* queue, struct coord_t* element);
  */
 bool queue_dequeue(struct queue_t* queue);
 
-/**
- * Get the element at the front of the queue without removing it.
- * @param queue A pointer to the queue.
- * @return A pointer to the head element, or NULL if the queue is empty or NULL.
- */
-struct coord_t* queue_peek(struct queue_t* queue);
-
 #endif
