@@ -108,17 +108,26 @@ enum direction get_next_direction(enum direction current_direction) {
 }
 
 /**
- * Compute the time elapsed between two timespec structs in milliseconds.
+ * @brief Calculates the elapsed time between two timespec timestamps in milliseconds.
  *
- * - tv_sec is in seconds → multiplied by 1000.0 to convert to milliseconds.
- * - tv_nsec is in nanoseconds → divided by 1.0e6 to convert to milliseconds.
+ * This function computes the time difference between two `struct timespec`
+ * values, returning the result as a double representing milliseconds.
  *
- * Example:
- *   2 sec and 500,000,000 ns → 2000 + 500 = 2500 ms
+ * Internally, the difference in seconds is multiplied by 1000.0 to convert
+ * to milliseconds, and the difference in nanoseconds is divided by 1.0e6
+ * to convert to milliseconds.
+ *
+ * For example:
+ *   - If start = 2s 0ns and end = 4s 500,000,000ns => result = 2500.0 ms
+ *
+ * @param start Pointer to the starting timespec.
+ * @param end Pointer to the ending timespec.
+ * @return Elapsed time in milliseconds as a double.
+ *
  */
 double elapsed_ms(struct timespec* start, struct timespec* end) {
-	return (end->tv_sec - start->tv_sec) * 1000.0 +          // seconds → ms
-		(end->tv_nsec - start->tv_nsec) / 1.0e6;            // nanoseconds → ms
+	return (end->tv_sec - start->tv_sec) * 1000.0 +          // seconds to ms
+		(end->tv_nsec - start->tv_nsec) / 1.0e6;            // nanoseconds to ms
 }
 
 int main(void) {
