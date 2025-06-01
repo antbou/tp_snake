@@ -226,11 +226,13 @@ int main(void) {
 				bool ate_food = (collision == FOOD_COLLISION);
 				if (hit_wall_or_reverse) {
 					printf("Wall collision or reverse turn detected\n");
+					free(new_head);
 					break;
 				}
 
 				if (hit_self) {
 					printf("Snake self-collision detected\n");
+					free(new_head);
 					break;
 				}
 
