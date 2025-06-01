@@ -43,7 +43,7 @@ sudo apt install libsdl2-dev libsdl2-ttf-dev
 Clonez le dépôt et compilez le projet avec `make` :
 
 ```sh
-git clone https://gitedu.hesge.ch/tonrepo/snake
+git clone https://gitedu.hesge.ch/anthony.bouillan/tp_snake
 cd snake
 make
 ```
@@ -131,3 +131,8 @@ Une liste des bugs rencontrés et résolus se trouve dans le fichier [docs/bug](
 ## Licence
 
 Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+### Ressources tierces
+
+La police utilisée dans le jeu, **Pixel Operator**, provient du site [dafont.com](https://www.dafont.com/pixel-operator.font).  
+Elle est distribuée sous licence **Creative Commons** par son auteur **Jayvee Enaguas**.
