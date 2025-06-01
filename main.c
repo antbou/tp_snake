@@ -1,5 +1,3 @@
-// Enable POSIX features clock_gettime for precise time measurement: https://stackoverflow.com/questions/48332332/what-does-define-posix-source-mean
-#define _POSIX_C_SOURCE 199309L
 #include <time.h>
 #include <stdio.h>
 #include <unistd.h>
