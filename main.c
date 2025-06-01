@@ -216,9 +216,9 @@ int main(int argc, char const* argv[]) {
 			last_direction = direction;
 			direction = get_next_direction(direction);
 
+			done = quit_signal();
 			// Memory leaks occur in gfx_present
 			gfx_present(ctxt);
-			done = quit_signal();
 
 
 			has_snake_won = queue->size >= max_snake_size;

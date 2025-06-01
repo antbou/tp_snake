@@ -34,59 +34,47 @@ static void draw_label(struct gfx_context_t* ctxt, const char* text, int y, int 
 }
 
 /**
- * Handle user input for navigating and confirming a menu selection.
+ * Processes user input to navigate the menu.
  *
- * @param selection Pointer to the current menu index.
- * @param min Minimum allowed selection index.
- * @param max Maximum allowed selection index.
- * @param confirmed Pointer to a boolean set to true if user presses ENTER or SPACE.
- * @return True if the quit signal was received (e.g., window closed), false otherwise.
+ * @param selection Current menu selection.
+ * @param min Minimum selection index.
+ * @param max Maximum selection index.
+ * @param confirmed Set to true if the user confirms the selection (ENTER or SPACE).
+ * @return Updated selection index (same or modified based on input).
  */
-static bool handle_selection_input(int* selection, int min, int max, bool* confirmed) {
+static int handle_selection_input(int selection, int min, int max, bool* confirmed) {
     SDL_Keycode key = gfx_keypressed();
     switch (key) {
-    case SDLK_UP: {
-        if (*selection > min) {
-            (*selection)--;  // Move selection up
-        }
+    case SDLK_UP:
+        if (selection > min) selection--;
         break;
-    }
-    case SDLK_DOWN: {
-        if (*selection < max) {
-            (*selection)++;  // Move selection down
-        }
+    case SDLK_DOWN:
+        if (selection < max) selection++;
         break;
-    }
     case SDLK_RETURN:
-    case SDLK_SPACE: {
-        *confirmed = true;  // Validate selection
+    case SDLK_SPACE:
+        *confirmed = true;
+        break;
+    default:
         break;
     }
-    default: {
-        break;
-    }
-    }
-
-    if (quit_signal()) {
-        return true;
-    }
-
-    return false;
+    return selection;
 }
 
 enum difficulty_level show_start_screen(struct gfx_context_t* ctxt) {
-    SDL_RenderClear(ctxt->renderer);
     int selection = NORMAL;
-    bool choosing = true;
     SDL_Color white = { 255, 255, 255, 255 };
     SDL_Color blue = { 0, 0, 255, 255 };
 
     const int spacing = 60;
     const int y = ctxt->height / 2 - 2 * spacing;
 
-    while (choosing) {
-        gfx_clear(ctxt, COLOR_BLACK);
+    while (true) {
+        if (quit_signal()) {
+            return LEAVE;
+        }
 
+        gfx_clear(ctxt, COLOR_BLACK);
         draw_label(ctxt, "SNAKE", y - 2 * spacing, 48, white);
         draw_menu_item(ctxt, "EASY", y, selection == EASY);
         draw_menu_item(ctxt, "NORMAL", y + spacing, selection == NORMAL);
@@ -94,35 +82,39 @@ enum difficulty_level show_start_screen(struct gfx_context_t* ctxt) {
         draw_label(ctxt, "PRESS ENTER", y + 4 * spacing, 24, blue);
 
         SDL_RenderPresent(ctxt->renderer);
+
         bool confirmed = false;
-        if (handle_selection_input(&selection, EASY, HARD, &confirmed)) {
+        selection = handle_selection_input(selection, EASY, HARD, &confirmed);
+        if (confirmed) {
+            break;
+        }
+        if (quit_signal()) {
             return LEAVE;
         }
 
-        if (confirmed) {
-            choosing = false;
-        }
-
-        usleep(120000); // Avoid skipping options by holding key
+        usleep(2000); // Avoid skipping options by holding key
     }
 
-    // Cast selection index back to enum
     return (enum difficulty_level)selection;
 }
 
 bool show_end_screen(struct gfx_context_t* ctxt, int score, bool does_player_win) {
     int selection = 0;  // 0 = play again, 1 = leave
-    bool choosing = true;
     SDL_Color white = { 255, 255, 255, 255 };
 
     const int spacing = 60;
     const int y = ctxt->height / 2 - 2 * spacing;
-    while (choosing) {
+
+    while (true) {
+        if (quit_signal()) {
+            return false;
+        }
+
         gfx_clear(ctxt, COLOR_BLACK);
 
         const char* result_text = does_player_win ? "YOU WIN" : "GAME OVER";
 
-        char score_text[32]; // 15 + 11 + 1 = max 27
+        char score_text[32];
         snprintf(score_text, sizeof(score_text), "Your score is %d", score);
 
         draw_label(ctxt, result_text, y - 2 * spacing, 48, white);
@@ -133,14 +125,15 @@ bool show_end_screen(struct gfx_context_t* ctxt, int score, bool does_player_win
         SDL_RenderPresent(ctxt->renderer);
 
         bool confirmed = false;
-        if (handle_selection_input(&selection, 0, 1, &confirmed)) {
-            return false;
-        }
+        selection = handle_selection_input(selection, 0, 1, &confirmed);
         if (confirmed) {
-            choosing = false;
+            break;
+        }
+        if (quit_signal()) {
+            return LEAVE;
         }
 
-        usleep(120000); // Avoid double selection due to fast key repeat
+        usleep(2000); // Avoid double selection due to fast key repeat
     }
 
     return (selection == 0);
