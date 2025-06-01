@@ -3,9 +3,7 @@ CFLAGS  = -Wall -Wextra -pedantic -g
 LDLIBS  = -lSDL2 -lSDL2_ttf
 LDFLAGS = -fsanitize=address -fsanitize=leak -fsanitize=undefined
 
-.PHONY: clean run all
-
-all: main
+.PHONY: clean run
 
 main: main.o gfx.o snake.o queue.o coord.o menu.o food.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
@@ -32,7 +30,7 @@ food.o: food/food.c food/food.h gfx/gfx.h
 	$(CC) $(CFLAGS) $< -c
 
 run: main
-	./main
+	./main 3 30
 
 clean:
 	rm -f main *.o

@@ -115,10 +115,34 @@ double elapsed_ms(struct timespec* start, struct timespec* end) {
 		(end->tv_nsec - start->tv_nsec) / 1.0e6;            // nanoseconds to ms
 }
 
-int main(void) {
 
+int main(int argc, char const* argv[]) {
 	const int width = 1920;
 	const int height = 1080;
+
+	double food_spawn_interval = FOOD_SPAWN_INTERVAL;
+	int max_food_count = MAX_FOOD_COUNT;
+
+	// Optional parameters: [food_spawn_interval_seconds] [max_food_count]
+	if (argc >= 3) {
+		double interval_input = atof(argv[1]);
+		int food_input = atoi(argv[2]);
+
+		bool valid_args = (interval_input > 0 && food_input > 0);
+		if (valid_args) {
+			food_spawn_interval = interval_input * 1000.0;  // seconds to ms
+			max_food_count = food_input;
+			printf("Using custom settings: %.0f ms interval, %d max food\n",
+				food_spawn_interval, max_food_count);
+		} else {
+			fprintf(stderr, "Invalid parameters. Using defaults: %.0f ms interval, %d max food\n",
+				food_spawn_interval, max_food_count);
+			fprintf(stderr, "Usage: %s [interval_seconds > 0] [max_food_count > 0]\n", argv[0]);
+		}
+	} else {
+		printf("No parameters provided. Using defaults: %.0f ms interval, %d max food\n",
+			food_spawn_interval, max_food_count);
+	}
 
 	struct gfx_context_t* ctxt = setup_context(width, height);
 	if (!ctxt) {
@@ -191,7 +215,7 @@ int main(void) {
 			// Check if it's time to spawn food
 			double time_since_last_food = elapsed_ms(&last_food_time, &current_time);
 			bool should_spawn_food = (
-				(time_since_last_food >= FOOD_SPAWN_INTERVAL && food_counter < MAX_FOOD_COUNT)
+				(time_since_last_food >= food_spawn_interval && food_counter < max_food_count)
 				|| food_counter == 0
 				);
 			if (should_spawn_food) {
